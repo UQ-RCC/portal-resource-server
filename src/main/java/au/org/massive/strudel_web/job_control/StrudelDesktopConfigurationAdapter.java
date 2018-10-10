@@ -104,15 +104,18 @@ public class StrudelDesktopConfigurationAdapter extends HashMap<String, JsonSyst
         Map<String, Object> parsedConfig = new HashMap<>();
         parsedConfig.put("loginHost", loginHost);
         
+        Map<String, String> defaults = null;
         // Get defaults
-        @SuppressWarnings("unchecked") Map<String, Object> jobDefaults = (Map<String, Object>) config.get("defaults");
-        final int jobHours = ((Double) jobDefaults.get("jobParams_hours")).intValue();
-        final int jobMem = ((Double) jobDefaults.get("jobParams_mem")).intValue();
-        final int jobPPN = ((Double) jobDefaults.get("jobParams_ppn")).intValue();
-        Map<String, String> defaults = new HashMap<>();
-        defaults.put("hours", String.valueOf(jobHours));
-        defaults.put("ppn", String.valueOf(jobPPN));
-        defaults.put("mem", String.valueOf(jobMem));
+        if(config.containsKey("deaults")) {
+            @SuppressWarnings("unchecked") Map<String, Object> jobDefaults = (Map<String, Object>) config.get("defaults");
+            final int jobHours = ((Double) jobDefaults.get("jobParams_hours")).intValue();
+            final int jobMem = ((Double) jobDefaults.get("jobParams_mem")).intValue();
+            final int jobPPN = ((Double) jobDefaults.get("jobParams_ppn")).intValue();
+            defaults = new HashMap<>();
+            defaults.put("hours", String.valueOf(jobHours));
+            defaults.put("ppn", String.valueOf(jobPPN));
+            defaults.put("mem", String.valueOf(jobMem));        	
+        }
 	
         if(!config.containsKey("Commands"))
         	throw new InvalidJsonConfigurationException("We are using new config file here. All commands are put under Commands tag");
@@ -136,7 +139,8 @@ public class StrudelDesktopConfigurationAdapter extends HashMap<String, JsonSyst
         // iterate through tasks
         @SuppressWarnings("unchecked") Map<String, Object> specifiedCmds = ((Map<String,Object>)config.get("Commands"));
 	    for(String function: specifiedCmds.keySet()) {
-	    	if(function.equals("startServer"))
+	    	//TODO: this is coesra specific thing - to remove it.
+	    	if(function.equals("startServer") && defaults != null)
 				tasks.put(function.toLowerCase(), extractFunctionFromStrudelConfig(function, specifiedCmds, defaults));
 			else
         		tasks.put(function.toLowerCase(), extractFunctionFromStrudelConfig(function, specifiedCmds));
