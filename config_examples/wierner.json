@@ -1,0 +1,156 @@
+[
+    [
+        "Microvolution"
+    ],
+    {
+        "Microvolution": {
+            "loginHost": null,
+            "username": null,
+           	"messageRegexs": [
+                {
+                    "pattern": "^INFO:(?P<info>.*(?:\n|\r\n?))"
+                },
+                {
+                    "pattern": "^WARN:(?P<warn>.*(?:\n|\r\n?))"
+                },
+                {
+                    "pattern": "^ERROR:(?P<error>.*(?:\n|\r\n?))"
+                }
+            ],
+            "Commands": {
+		    "home": {
+	        	"async": false,
+	        	"cmd": "printenv HOME",
+	        	"failFatal": true,
+	        	"formatFatal": false,
+	        	"host": "login",
+	        	"loop": false,
+	        	"regex": [
+	        	    "^(?P<home>.*)$"
+	        	],
+	        	"requireMatch": false
+    		    },
+	           "listAll": {
+	                "async": false,
+	                "cmd": "squeue -u $(whoami) -o \\\"%i %u %T %D %L\\\" | tail -n+2",
+	                "failFatal": true,
+	                "formatFatal": false,
+	                "host": "login",
+	                "loop": false,
+	                "regex": [
+	                    "(?P<jobid>(?P<jobidNumber>[0-9]+)) (?P<uname>.*) (?P<status>.*) (?P<nnodes>[0-9]+) (?P<remainingWalltime>.*)$"
+	                ],
+	                "requireMatch": false
+	            },
+	            "stop": {
+	                "async": false,
+	                "cmd": "scancel {jobidNumber}",
+	                "failFatal": true,
+	                "formatFatal": false,
+	                "host": "login",
+	                "loop": false,
+	                "regex": [
+	                    null
+	                ],
+	                "requireMatch": false
+	            },
+	            "listFolder": {
+	                "async": true,
+	                "cmd": "ls -lh {folderpath}/",
+	                "failFatal": true,
+	                "formatFatal": false,
+	                "host": "login",
+	                "loop": false,
+	                "regex": [
+	                    "(?P<permission>[^ ]+) +(?P<links>[0-9]+) +(?P<owner>[^ ]+) +(?P<group>[^ ]+) +(?P<size>[^ ]+) +(?P<modm>[^ ]+) +(?P<modd>[0-9]+) +(?P<modh>[^ ]+) +(?P<name>.*)"      
+	                ],
+	                "requireMatch": true
+	            },
+	         "fileInfo": {
+	                "async": true,
+	                "cmd": "module load cuda91/fiji/150; ImageJ-linux64 --ij2 --headless --run /afm01/home/uqhngu36/microvolution/read_single.py 'filepath=\"{filepath}\"' 2>/dev/null",
+	                "failFatal": true,
+	                "formatFatal": false,
+	                "host": "login",
+	                "loop": false,
+	                "regex": [
+	                    "(?P<x>[0-9]+);(?P<y>[0-9]+);(?P<z>[0-9]+);(?P<c>[0-9]+);(?P<t>[0-9]+);(?P<dr>.*);(?P<dz>.*)"                        
+	                ],
+	                "requireMatch": true
+	            },
+		"filesInfo": {
+	                "async": true,
+	                "cmd": "module load cuda91/fiji/150; ImageJ-linux64 --ij2 --headless --run /afm01/home/uqhngu36/microvolution/read_multiple.py 'fileslist=\"{fileslist}\"' 2>/dev/null",
+	                "failFatal": true,
+	                "formatFatal": false,
+	                "host": "login",
+	                "loop": false,
+	                "regex": [
+	                    "(?P<path>.*);(?P<x>[0-9]+);(?P<y>[0-9]+);(?P<z>[0-9]+);(?P<c>[0-9]+);(?P<t>[0-9]+);(?P<dr>.*);(?P<dz>.*)"                        
+	                ],
+	                "requireMatch": true
+	            },	
+	        "saveTemplate":{
+                    "async": true,
+                    	"cmd": "mkdir -p ~/.microvolution; echo -e \"{'lateralSpacing':{latSpacing},'axialSpacing':{axSpacing},'psfLatSpacing':{psfLatSpacing},'psfAxSpacing':{psfAxSpacing},'padding':{padding},'tiling':{tiling},'NA':{NA},'ns':{ns},'RI':{RI},'psfModel':{psfModel},'backgroundType':{backgroundType},'swapZT':{swapZT},'swapPsfZT':{swapPsfZT},'iterations':{iterations},'wavelength':{wavelength},'pinholes':{pinholes},'background':{background},'devices':{devices},'generatePsf':{generatePsf},'psfFile':{psfFile},'instances':{instances},'mem':{mem},'regularizationType':{regType},'regularization':{regularization},'preFilter':{prefilter},'postFilter':{postfilter},'blind':{blind},'scaling':{scaling},'format':{format},'psfType':{psfType}\"} > ~/.microvolution/{templateName}.template",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false
+                },
+                "listTemplate":{
+                    "async": true,
+                    "cmd": "find ~/.microvolution/*.template  -printf '%f\n' | cut -d '.' -f 1",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "^(?P<template>.*)$"
+                    ],
+                    "requireMatch": true
+                },
+                "loadTemplate":{
+                    "async": true,
+                    "cmd": "cat ~/.microvolution/{templateName}.template",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "^(?P<contents>.*)$"
+                    ],
+                    "requireMatch": true
+                },
+		"testExecute":{
+                        "async": true,
+                        "cmd": "mkdir -p ~/.microvolution; echo -e 'lateralSpacing={latSpacing}\naxialSpacing={axSpacing}\npsfLatSpacing={psfLatSpacing}\npsfAxSpacing={psfAxSpacing}\npadding={padding}\ntiling={tiling}\nNA={NA}\nns={ns}\nRI={RI}\npsfModel={psfModel}\nbackgroundType={backgroundType}\nswapZT={swapZT}\nswapPsfZT={swapPsfZT}\niterations={iterations}\npinholes={pinholes}\nwavelength={wavelength}\nbackground={background}\ndevices={devices}\nfiles={files}\nfolders={folders}\noutput={output}\ngeneratePsf={generatePsf}\npsfFile={psfFile}\nregularizationType={regType}\nregularization={regularization}\npreFilter={prefilter}\npostFilter={postfilter}\nblind={blind}\nscaling={scaling}\nformat={format}\npsfType={psfType}' > ~/.microvolution/run.pref; echo -e '#!/bin/bash\n module purge; module load cuda91/fiji/150; ImageJ-linux64 --allow-multiple --ij2 --headless --run /afm01/home/uqhngu36/microvolution/execute.py [partitions={instances},current=$SLURM_ARRAY_TASK_ID] | sbatch --array=0-{arrayMax} -N1 -n1 -c1 --mem={mem} --partition=gpu --gres=gpu:tesla:{devices} -J microvolution -o {output}/%j.out' > ~/.microvolution/test.sh",
+                        "failFatal": true,
+                        "formatFatal": false,
+                        "host": "login",
+                        "loop": false,
+                        "regex": [
+                            null
+                        ],
+                        "requireMatch": false
+                    },
+	            "executeMicrovolution":{
+	                "async": true,
+	                "cmd": "mkdir -p ~/.microvolution; echo -e 'lateralSpacing={latSpacing}\naxialSpacing={axSpacing}\npsfLatSpacing={psfLatSpacing}\npsfAxSpacing={psfAxSpacing}\npadding={padding}\ntiling={tiling}\nNA={NA}\nns={ns}\nRI={RI}\npsfModel={psfModel}\nbackgroundType={backgroundType}\nswapZT={swapZT}\nswapPsfZT={swapPsfZT}\niterations={iterations}\npinholes={pinholes}\nwavelength={wavelength}\nbackground={background}\ndevices={devices}\nfiles={files}\nfolders={folders}\noutput={output}\ngeneratePsf={generatePsf}\npsfFile={psfFile}\nregularizationType={regType}\nregularization={regularization}\npreFilter={prefilter}\npostFilter={postfilter}\nblind={blind}\nscaling={scaling}\nformat={format}\npsfType={psfType}' > ~/.microvolution/run.pref; mkdir -p {output};echo -e '#!/bin/bash\n module purge; module load cuda91/fiji/150; ImageJ-linux64 --allow-multiple --ij2 --headless --run /afm01/home/uqhngu36/microvolution/execute.py [partitions={instances},current=$SLURM_ARRAY_TASK_ID]' | sbatch --array=0-{arrayMax} -N1 -n1 -c1 --mem={mem} --partition=gpu --gres=gpu:tesla:{devices} -J microvolution -o {output}/%j.out",
+	                "failFatal": true,
+	                "formatFatal": false,
+	                "host": "login",
+	                "loop": false,
+	                "regex": [
+	                    null
+	                ],
+	                "requireMatch": false                
+	            }
+            }
+        }
+    }
+]

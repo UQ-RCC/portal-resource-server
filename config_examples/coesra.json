@@ -1,0 +1,315 @@
+[
+    [
+	"CoESRA"
+    ],
+    {
+        "CoESRA": {
+            "username": null,
+            "loginHost": null,
+            "defaults": {
+                "jobParams_hours": 120,
+                "jobParams_mem": 4,
+                "jobParams_ppn": 2
+            },
+            "directConnect": true,
+            "siteRanges": {
+                "jobParams_hours": [
+                    1,
+                    336
+                ],
+                "jobParams_mem": [
+                    1,
+                    12
+                ],
+                "jobParams_nodes": [
+                    1,
+                    10
+                ],
+                "jobParams_ppn": [
+                    1,
+                    12
+                ]
+            },
+            "messageRegexs": [
+                {
+                    "pattern": "^INFO:(?P<info>.*(?:\n|\r\n?))"
+                },
+                {
+                    "pattern": "^WARN:(?P<warn>.*(?:\n|\r\n?))"
+                },
+                {
+                    "pattern": "^ERROR:(?P<error>.*(?:\n|\r\n?))"
+                }
+            ],
+            "Commands": {
+                "exists": {
+                    "async": false,
+                    "cmd": "if [ -d $HOME ] && /opt/slurm-14.11.6/bin/sacctmgr list user format=User%-50 | grep --quiet `whoami`; then echo true; else echo false; fi",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [ "^(true|false)$" ],
+                    "requireMatch": true
+                },
+                "agent": {
+                    "async": true,
+                    "cmd": "{sshBinary} -A -c {cipher} -t -t -oStrictHostKeyChecking=no -l {username} {execHost} \"echo agent_hello; bash \"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "local",
+                    "loop": false,
+                    "regex": [
+                        "agent_hello"
+                    ],
+                    "requireMatch": true
+                },
+                "execHost": {
+                    "async": false,
+                    "cmd": "\"/opt/slurm-14.11.6/bin/squeue -j {jobidNumber} -o \"%N\" | tail -n -1 | cut -f 1 -d ',' | xargs -iname getent hosts name | cut -f 1 -d ' ' \"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "^(?P<execHost>.*)$"
+                    ],
+                    "requireMatch": true
+                },
+                "getProjects": {
+                    "async": false,
+                    "cmd": "\"groups | sed 's@ @\\n@g'\"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "^\\s*(?P<group>\\S+)\\s*$"
+                    ],
+                    "requireMatch": true
+                },
+                "listAll": {
+                    "async": false,
+                    "cmd": "/opt/slurm-14.11.6/bin/squeue -u `whoami` -o \\\"%i %L\\\" | tail -n -1",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "(?P<jobid>(?P<jobidNumber>[0-9]+)) (?P<remainingWalltime>.*)$"
+                    ],
+                    "requireMatch": false
+                },
+                "otp": {
+                    "async": false,
+                    "cmd": "'cat ~/.vnc/clearpass'",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "^(?P<vncPasswd>\\S+)$"
+                    ],
+                    "requireMatch": true
+                },
+                "running": {
+                    "async": false,
+                    "cmd": "\"/opt/slurm-14.11.6/bin/scontrol show job {jobidNumber}\"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "JobState=RUNNING"
+                    ],
+                    "requireMatch": true
+                },
+                "startServer": {
+                    "async": false,
+                    "cmd": "mkdir -p ~/.vnc ; rm -f ~/.vnc/clearpass ; touch ~/.vnc/clearpass ; chmod 600 ~/.vnc/clearpass ; passwd=$( dd if=/dev/urandom bs=1 count=8 2>/dev/null | md5sum | cut -b 1-8 ) ; echo $passwd > ~/.vnc/clearpass ; cat ~/.vnc/clearpass | vncpasswd -f > ~/.vnc/passwd ; chmod 600 ~/.vnc/passwd ; echo -e '#!/bin/bash\n /opt/singularity/bin/singularity exec -B /nfs/home/EcoStore:/home/EcoStore,/nfs/home/OzFlux:/home/OzFlux,/nfs/home/public_share_data:/home/public_share_data,/nfs/home/public_share_workflow:/home/public_share_workflow /nfs/home/public_share_data/installers/coesra-containers/{container} vncserver; sleep 36000000 ' | /opt/slurm-14.11.6/bin/sbatch -p batch -s -n 1 -c {ppn} --mem={mem}gb --time={hours}:00:00 -J desktop_'test' -o .vnc/slurm-%j.out; echo /nfs/home/public_share_data/installers/coesra-containers/{container} > ~/.vnc/containerpath",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "^Submitted batch job (?P<jobid>(?P<jobidNumber>[0-9]+))$"
+                    ],
+                    "requireMatch": true
+                },
+		"currentContainer": {
+		    "async": false,
+		    "cmd": "cat ~/.vnc/containerpath",
+		    "failFatal": true,
+		    "formatFatal": false,
+		    "host": "login",
+		    "loop": false,
+		    "regex": [
+		         "^(?P<containerPath>.*)$"
+		    ],
+		    "requireMatch": true
+		},
+		"getContainers": {
+		     "async": true,
+		     "cmd": "\"ls -1r /nfs/home/public_share_data/installers/coesra-containers | sed 's@ @\\n@g' | sort -r \"",
+		     "failFatal": true,
+		     "formatFatal": false,
+		     "host": "login",
+		     "loop": false,
+		     "regex": [
+		         "^\\s*(?P<container>\\S+)\\s*$"
+		    ],
+		    "requireMatch": true 
+		},
+		"getCpuinfo": {
+                    "async": false,
+                    "cmd": "/opt/slurm-14.11.6/bin/scontrol -o show nodes | awk '{print $1, $4,$6}' |grep 'centos' ",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                         "^NodeName=(?P<nodename>.+) CPUAlloc=(?P<alloc>[0-9]*) CPUTot=(?P<total>[0-9]*)$"
+                    ],
+                    "requireMatch": true
+
+                },
+                "getMeminfo": {
+                    "async": false,
+                    "cmd": "/opt/slurm-14.11.6/bin/scontrol -o show nodes | awk '{print $1, $15,$14}' |grep 'centos' ",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                         "^NodeName=(?P<nodename>.+) AllocMem=(?P<alloc>[0-9]*) RealMemory=(?P<total>[0-9]*)$"
+                    ],
+                    "requireMatch": true
+
+                },
+
+               "getUptime": {
+                    "async": false,
+                    "cmd": "/opt/slurm-14.11.6/bin/scontrol -o show nodes | awk '{print $1, $18,$22}' |grep 'centos' ",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                         "^NodeName=(?P<nodename>.+) State=(?P<state>.+) BootTime=(?P<boot>.+)$"
+                    ],
+                    "requireMatch": true
+
+                },
+		"getDiskspace":{
+		    "async": false, 
+		    "cmd": "df -h /nfs |awk '{print $2, $3, $4, $5}' |sed -n 2p ",
+		     "failFatal": true,
+		     "formatFatal": false,
+		     "host": "login",
+		     "loop": false,
+		     "regex": [
+		         "^(?P<total>.+) (?P<alloc>.+) (?P<avail>.+) (?P<percent>.+)$"
+		     ],
+		     "requireMatch": true
+		},
+		
+		"getUsage":{
+		     "async": true,
+		     "cmd": "/opt/slurm-14.11.6/bin/sacct -n -j all -u `whoami` --format=jobid,alloccpus,cputime,reqmem,start,end,elapsed |tr -s ' ' |grep -vwE '(Unknown|batch)'|tail -5 | sort -r -k1 -n",
+		     "failFatal": true,
+		     "formatFatal": false,
+		     "host": "login",
+		     "loop": false,
+		     "regex": [
+		         "^(?P<jobid>[0-9]*) (?P<alloccpus>.+) (?P<cputime>.+) (?P<reqmem>.+) (?P<start>.+) (?P<end>.+) (?P<elapsed>.+)$"
+		     ],
+		     "requireMatch": true
+		},
+                "runKeplerDesktop": {
+                    "async": false,
+                    "cmd": "\"/opt/kepler/kepler-2.4/kepler.sh {params} {workflow} &\"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": true
+                },
+                "runKeplerHeadless": {
+                    "async": false,                
+                    "cmd": "echo -e '#!/bin/bash \n/opt/kepler/kepler-2.4/kepler.sh -runwf -nogui {params} {workflow}' | /opt/slurm-14.11.6/bin/sbatch -p batch -N '1' -n '1' --time='48':00:00 -J desktop_'hoangnguyen' -o .vnc/slurm-%j.out",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "^Submitted batch job (?P<jobid>(?P<jobidNumber>[0-9]+))$"
+                    ],
+                    "requireMatch": true
+                },
+                "stop": {
+                    "async": false,
+                    "cmd": "\"/opt/slurm-14.11.6//bin/scancel {jobidNumber}\"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false
+                },
+                "stopForRestart": {
+                    "async": false,
+                    "cmd": "\"scancel {jobidNumber}\"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false
+                },
+                "tunnel": {
+                    "async": true,
+                    "cmd": "{sshBinary} -A -c {cipher} -t -t -oStrictHostKeyChecking=no -L {localPortNumber}:localhost:{remotePortNumber} -l {username} {execHost} \"echo tunnel_hello; bash\"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "local",
+                    "loop": false,
+                    "regex": [
+                        "tunnel_hello"
+                    ],
+                    "requireMatch": true
+                },
+                "vncDisplay": {
+                    "async": false,
+                    "cmd": "\"cat .vnc/slurm-{jobidNumber}.out\"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "exec",
+                    "loop": false,
+                    "regex": [
+                        "^.*?New .* desktop is \\S+(?P<vncDisplay>:[0-9]+)\\s*$"
+                    ],
+                    "requireMatch": true
+                },
+                "sshPrivateKey":{
+                    "async": false,
+                    "cmd": "[ ! -f ~/.ssh/authorized_keys ] && touch ~/.ssh/authorized_keys;[ ! -f ~/.ssh/coesra ] && ssh-keygen -q -t rsa -f ~/.ssh/coesra -N '' && cat ~/.ssh/coesra.pub >> ~/.ssh/authorized_keys; tr '\n' ':' < ~/.ssh/coesra",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "^(?P<privateKey>.*)$"
+                    ],
+                    "requireMatch": true
+                }
+            }
+        }
+    }
+]
