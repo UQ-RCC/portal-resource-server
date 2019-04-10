@@ -18,43 +18,43 @@
                 }
             ],
             "Commands": {
-		    "home": {
-	        	"async": false,
-	        	"cmd": "printenv HOME",
-	        	"failFatal": true,
-	        	"formatFatal": false,
-	        	"host": "login",
-	        	"loop": false,
-	        	"regex": [
-	        	    "^(?P<home>.*)$"
-	        	],
-	        	"requireMatch": false
-    		    },
-	           "listAll": {
-	                "async": false,
-	                "cmd": "squeue -u $(whoami) -o \\\"%i %u %T %D %L\\\" | tail -n+2",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    "(?P<jobid>.*) (?P<uname>.*) (?P<status>.*) (?P<nnodes>[0-9]+) (?P<remainingWalltime>.*)$"
-	                ],
-	                "requireMatch": false
-	            },
-	            "stop": {
-	                "async": false,
-	                "cmd": "scancel {jobidNumber}",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    null
-	                ],
-	                "requireMatch": false
-	            },
-	            "saveTemplate":{
+    		    "home": {
+    	        	"async": false,
+    	        	"cmd": "printenv HOME",
+    	        	"failFatal": true,
+    	        	"formatFatal": false,
+    	        	"host": "login",
+    	        	"loop": false,
+    	        	"regex": [
+    	        	    "^(?P<home>.*)$"
+    	        	],
+    	        	"requireMatch": false
+        	   },
+               "listAll": {
+                    "async": false,
+                    "cmd": "squeue -u $(whoami) -o \\\"%i %j %u %T %D %M\\\" | tail -n+2",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "(?P<jobid>.*) (?P<jobName>.*) (?P<uname>.*) (?P<status>.*) (?P<nnodes>[0-9]+) (?P<usedTime>.*)$"
+                    ],
+                    "requireMatch": false
+                },
+                "stop": {
+                    "async": false,
+                    "cmd": "scancel {jobidNumber}",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false
+                },
+                "saveTemplate":{
                     "async": true,
                     	"cmd": "mkdir -p ~/.microvolution; echo -e \"{'lateralSpacing':{latSpacing},'axialSpacing':{axSpacing},'psfLatSpacing':{psfLatSpacing},'psfAxSpacing':{psfAxSpacing},'padding':{padding},'tiling':{tiling},'NA':{NA},'ns':{ns},'RI':{RI},'psfModel':{psfModel},'backgroundType':{backgroundType},'swapZT':{swapZT},'swapPsfZT':{swapPsfZT},'iterations':{iterations},'wavelength':{wavelength},'pinholes':{pinholes},'background':{background},'devices':{devices},'generatePsf':{generatePsf},'psfFile':{psfFile},'instances':{instances},'mem':{mem},'regularizationType':{regType},'regularization':{regularization},'preFilter':{prefilter},'postFilter':{postfilter},'blind':{blind},'scaling':{scaling},'format':{format},'psfType':{psfType}\"} > ~/.microvolution/{templateName}.template",
                     "failFatal": true,
@@ -65,18 +65,6 @@
                         null
                     ],
                     "requireMatch": false
-                },
-                "testExecute":{
-                        "async": true,
-                        "cmd": "mkdir -p ~/.microvolution; echo -e 'lateralSpacing={latSpacing}\naxialSpacing={axSpacing}\npsfLatSpacing={psfLatSpacing}\npsfAxSpacing={psfAxSpacing}\npadding={padding}\ntiling={tiling}\nNA={NA}\nns={ns}\nRI={RI}\npsfModel={psfModel}\nbackgroundType={backgroundType}\nswapZT={swapZT}\nswapPsfZT={swapPsfZT}\niterations={iterations}\npinholes={pinholes}\nwavelength={wavelength}\nbackground={background}\ndevices={devices}\nfiles={files}\nfolders={folders}\noutput={output}\ngeneratePsf={generatePsf}\npsfFile={psfFile}\nregularizationType={regType}\nregularization={regularization}\npreFilter={prefilter}\npostFilter={postfilter}\nblind={blind}\nscaling={scaling}\nformat={format}\npsfType={psfType}' > ~/.microvolution/run.pref; echo -e '#!/bin/bash\n module purge; module load cuda/9.1.85.3; module load cuda91/fiji/150; ImageJ-linux64 --allow-multiple --ij2 --headless --run /clusterdata/uqhngu36/microvolution_scripts/execute.py [partitions={instances},current=$SLURM_ARRAY_TASK_ID] | sbatch --array=0-{arrayMax} -N1 -n1 -c1 --mem={mem} --partition=gpu --gres=gpu:tesla:{devices} -J microvolution -o {output}/%j.out' > ~/.microvolution/test.sh",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-                            null
-                        ],
-                        "requireMatch": false
                 },
                 "listTemplate":{
                     "async": true,
@@ -103,52 +91,52 @@
                     "requireMatch": true
                 },
                 "listFolderBase64": {
-	                "async": true,
-	                "cmd": "echo {folderpath} | base64 --decode | xargs -d '\n' ls -lh",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    "(?P<permission>[^ ]+) +(?P<links>[0-9]+) +(?P<owner>[^ ]+) +(?P<group>[^ ]+) +(?P<size>[^ ]+) +(?P<modm>[^ ]+) +(?P<modd>[0-9]+) +(?P<modh>[^ ]+) +(?P<name>.*)"      
-	                ],
-	                "requireMatch": true
-	            },
+                    "async": true,
+                    "cmd": "echo {folderpath} | base64 --decode | xargs -d '\n' ls -lh",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "(?P<permission>[^ ]+) +(?P<links>[0-9]+) +(?P<owner>[^ ]+) +(?P<group>[^ ]+) +(?P<size>[^ ]+) +(?P<modm>[^ ]+) +(?P<modd>[0-9]+) +(?P<modh>[^ ]+) +(?P<name>.*)"      
+                    ],
+                    "requireMatch": true
+                },
                 "filesInfoBase64": {
-	                "async": true,
-	                "cmd": "module load cuda91/fiji/150; ImageJ-linux64 --ij2 --headless --run /clusterdata/uqhngu36/microvolution_scripts/read_multiple_base64.py 'fileslist=\"{fileslist}\"' 2>/dev/null",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    "(?P<path>.*);(?P<x>[0-9]+);(?P<y>[0-9]+);(?P<z>[0-9]+);(?P<c>[0-9]+);(?P<t>[0-9]+);(?P<dr>.*);(?P<dz>.*);(?P<defaultoutput>.*)"                        
-	                ],
-	                "requireMatch": true
-	            },
+                    "async": true,
+                    "cmd": "module load cuda91/fiji/150; ImageJ-linux64 --ij2 --headless --run /clusterdata/uqhngu36/portal-data/scripts/read_multiple_base64.py 'fileslist=\"{fileslist}\"' 2>/dev/null",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "(?P<path>.*);(?P<x>[0-9]+);(?P<y>[0-9]+);(?P<z>[0-9]+);(?P<c>[0-9]+);(?P<t>[0-9]+);(?P<dr>.*);(?P<dz>.*);(?P<maxSizeM>.*);(?P<defaultoutput>.*);(?P<threshold>.*);(?P<stddev>.*);(?P<unit>.*);(?P<pixelW>.*);(?P<pixelH>.*);(?P<pixelD>.*)"                        
+                    ],
+                    "requireMatch": true
+                },
                 "fileInfoBase64": {
-                        "async": true,
-                        "cmd": "module load cuda91/fiji/150; ImageJ-linux64 --ij2 --headless --run /clusterdata/uqhngu36/microvolution_scripts/read_single_base64.py 'filepath=\"{filepath}\"' 2>/dev/null",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-                            "(?P<x>[0-9]+);(?P<y>[0-9]+);(?P<z>[0-9]+);(?P<c>[0-9]+);(?P<t>[0-9]+);(?P<dr>.*);(?P<dz>.*)"
-                        ],
-                        "requireMatch": true
+                    "async": true,
+                    "cmd": "module load cuda91/fiji/150; ImageJ-linux64 --ij2 --headless --run /clusterdata/uqhngu36/portal-data/scripts/read_single_base64.py 'filepath=\"{filepath}\"' 2>/dev/null",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "(?P<x>[0-9]+);(?P<y>[0-9]+);(?P<z>[0-9]+);(?P<c>[0-9]+);(?P<t>[0-9]+);(?P<dr>.*);(?P<dz>.*);(?P<threshold>.*);(?P<stddev>.*);(?P<unit>.*);(?P<pixelW>.*);(?P<pixelH>.*);(?P<pixelD>.*)"
+                    ],
+                    "requireMatch": true
                     },
                "folderInfoBase64": {
-                        "async": true,
-                        "cmd": "module load cuda91/fiji/150; ImageJ-linux64 --ij2 --headless --run /clusterdata/uqhngu36/microvolution_scripts/read_folder_base64.py 'folderPath=\"{folderpath}\"' 2>/dev/null",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-                            "(?P<path>.*);(?P<x>[0-9]+);(?P<y>[0-9]+);(?P<z>[0-9]+);(?P<c>[0-9]+);(?P<t>[0-9]+);(?P<dr>.*);(?P<dz>.*);(?P<defaultoutput>.*)"
-                        ],
-                        "requireMatch": true
+                    "async": true,
+                    "cmd": "module load cuda91/fiji/150; ImageJ-linux64 --ij2 --headless --run /clusterdata/uqhngu36/portal-data/scripts/read_folder_base64.py 'folderPath=\"{folderpath}\"' 2>/dev/null",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "(?P<path>.*);(?P<x>[0-9]+);(?P<y>[0-9]+);(?P<z>[0-9]+);(?P<c>[0-9]+);(?P<t>[0-9]+);(?P<dr>.*);(?P<dz>.*);(?P<maxSizeM>.*);(?P<total>.*);(?P<defaultoutput>.*);(?P<threshold>.*);(?P<stddev>.*);(?P<unit>.*);(?P<pixelW>.*);(?P<pixelH>.*);(?P<pixelD>.*)"
+                    ],
+                    "requireMatch": true
                 },
                 "saveTemplateBase64":{
                     "async": true,
@@ -163,32 +151,92 @@
                     "requireMatch": false
                 },
                 "testExecuteBase64":{
-                        "async": true,
-                        "cmd": "mkdir -p {output}; echo {executioninfo} | base64 --decode > {output}/run.json; echo '#!/bin/bash\n module purge; module load cuda/9.1.85.3; module load cuda91/fiji/150; DECON_OUTPUT=\"{output}\" ImageJ-linux64 --allow-multiple --ij2 --headless --run /clusterdata/uqhngu36/microvolution_scripts/execute_from_json.py' > ~/.microvolution/test.sh",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-                            null
-                        ],
-                        "requireMatch": false
+                    "async": true,
+                    "cmd": "mkdir -p {output}; echo {executioninfo} | base64 --decode > {output}/run.json; echo '#!/bin/bash\n module purge; module load cuda/9.1.85.3; module load cuda91/fiji/150; DECON_OUTPUT=\"{output}\" ImageJ-linux64 --allow-multiple --ij2 --headless --run /clusterdata/uqhngu36/portal-data/scripts/execute_from_json.py' > ~/.microvolution/test.sh",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false
                 },
                 "executeMicrovolutionBase64":{
-	                "async": true,
-	                "cmd": "mkdir -p {output}; echo {executioninfo} | base64 --decode > {output}/run.json; echo '#!/bin/bash\n module purge; module load cuda/9.1.85.3;module load cuda91/fiji/150; DECON_OUTPUT=\"{output}\" ImageJ-linux64 --allow-multiple --ij2 --headless --run /clusterdata/uqhngu36/microvolution_scripts/execute_from_json.py' | sbatch --array=0-{arrayMax} --mem={mem} --partition=gpu --gres=gpu:tesla:{devices} --mail-user=microscopes@imb.uq.edu.au,{usermail} --mail-type=END -N1 -n1 -c1 -J microvolution -o {output}/%j.out",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    null
-	                ],
-	                "requireMatch": false                
-	            },
+                    "async": true,
+                    "cmd": "mkdir -p {output}; echo {executioninfo} | base64 --decode > {output}/run.json; iconv -f iso8859-1 -t utf-8 {output}/run.json > {output}/tempf; mv {output}/tempf {output}/run.json; echo '#!/bin/bash\n module purge; module load cuda/9.1.85.3;module load cuda91/fiji/150; DECON_OUTPUT=\"{output}\" ImageJ-linux64 --allow-multiple --ij2 --headless --run /clusterdata/uqhngu36/portal-data/scripts/execute_from_json.py' | sbatch --array=0-{arrayMax} --mem={mem}G --partition=gpu --gres=gpu:tesla:{devices} --mail-user=microscopes@imb.uq.edu.au,{usermail} --mail-type=END -N1 -n1 -c4 -L microvol@192.168.0.1 -J deconvolution -o {output}/%j.out -e {output}/%j.err",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false                
+                },
                 "convertFileBase64":{
                     "async": false,
-                    "cmd": "mkdir -p {output};python /clusterdata/uqhngu36/microvolution_scripts/converter.py -c ims2tif -o {output} -m {method} -p {prefix} -f '$(echo {files} | base64 --decode)'",
+                    "cmd": "mkdir -p {output};python /clusterdata/uqhngu36/portal-data/scripts/converter.py -c ims2tif -o {output} -m {method} -p {prefix} -f \"$(echo {files} | base64 --decode)\"",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false                
+                },
+                "deleteBase64":{
+                    "async": false,
+                    "cmd": "echo {fileslist} | base64 --decode | tr ';' '\n' | xargs -d '\n' rm -rf",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false
+                },
+                "copyBase64":{
+                    "async": false,
+                    "cmd": "sbatch --mem=10G --mail-user={usermail} --mail-type=END -N1 -n1 -c8 -J portal_copy /clusterdata/uqhngu36/portal-data/scripts/folder_copy.sh {sources} {dest} {parallel}",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false
+                },
+                "moveBase64":{
+                    "async": false,
+                    "cmd": "SRCDIR=\"$(echo {sources} | base64 --decode)\"; DESTDIR=\"$(echo {dest} | base64 --decode)\"; rsync -zr -f'+ */' -f'- *' $SRCDIR/ $DESTDIR/; cd $SRCDIR  &&  find . ! -type d -print0 | xargs -0 -n1 -P{parallel} -I% cp % $DESTDIR/%; rm -rf $SRCDIR",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false
+                },
+                "listCopying":{
+                    "async": false,
+                    "cmd": "squeue -u $(whoami) -o \\\"%j %i %u %T\\\" | tail -n+2 | grep portal_copy || true ",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        "(?P<jobname>.*) (?P<jobid>.*) (?P<username>.*) (?P<status>.*)$"
+                    ],
+                    "requireMatch": false
+                },
+                "preprocessing":{
+                    "async": true,
+                    "cmd": "mkdir -p {output}; echo {prepinfo} | base64 --decode > {output}/preprocess.json; iconv -f iso8859-1 -t utf-8 {output}/preprocess.json > {output}/tempf; mv {output}/tempf {output}/preprocess.json; echo '#!/bin/bash\n module purge; module load cuda/9.1.85.3;module load cuda91/fiji/150; PREP_OUTPUT=\"{output}\" ImageJ-linux64 --allow-multiple --ij2 --headless --run /clusterdata/uqhngu36/portal-data/scripts/preprocess_from_json.py' | sbatch --mem=10G --partition=gpu --gres=gpu:tesla:1 --mail-user=microscopes@imb.uq.edu.au,{usermail} --mail-type=END -N1 -n1 -c4 -L microvol@192.168.0.1 -J preprocess -o {output}/%j.out -e {output}/%j.err",
                     "failFatal": true,
                     "formatFatal": false,
                     "host": "login",
@@ -198,6 +246,7 @@
                     ],
                     "requireMatch": false                
                 }
+
             }
         }
     }

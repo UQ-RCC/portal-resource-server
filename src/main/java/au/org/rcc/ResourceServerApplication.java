@@ -81,7 +81,7 @@ public class ResourceServerApplication {
 			rsSettings.setJsonConfigFile(jsonFileValue);
 			securitySettings.readConfig(securityConfigFile);
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
+			e.printStackTrace();
 			System.exit(1);
 			return;
 		}
