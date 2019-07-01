@@ -176,7 +176,7 @@ public class JobControlEndpoints{
 			@RequestParam(value="remotehost") String remoteHost,
 			@RequestParam(value="display") int display,
 			@RequestParam(value="via_gateway",required=false) String viaGateway,
-			@RequestParam(value="configuration") String configurationName) throws IOException, InvalidKeyException, SignatureException, NoSuchAlgorithmException, NoSuchProviderException {
+			@RequestParam(value="configuration", defaultValue="") String configurationName) throws IOException, InvalidKeyException, SignatureException, NoSuchAlgorithmException, NoSuchProviderException {
     	OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
         Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
         String username = details.get("username").toString();
@@ -186,7 +186,10 @@ public class JobControlEndpoints{
             return null;
         }
     	int remotePort = display + 5900;
-        AbstractSystemConfiguration systemConfiguration = settings.getSystemConfigurations().getSystemConfigurationById(configurationName);
+        AbstractSystemConfiguration systemConfiguration = 
+        	settings.getSystemConfigurations().getDefaultSystemConfiguration();
+        if(configurationName != null && !configurationName.isEmpty())		
+        	systemConfiguration = settings.getSystemConfigurations().getSystemConfigurationById(configurationName);
         if (viaGateway == null && (systemConfiguration == null || !systemConfiguration.isTunnelTerminatedOnLoginHost())) {
             viaGateway = remoteHost;
             remoteHost = "localhost";

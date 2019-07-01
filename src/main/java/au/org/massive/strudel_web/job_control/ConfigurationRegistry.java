@@ -41,7 +41,8 @@ public class ConfigurationRegistry {
      * @return the default cert signing backend
      */
     public AbstractSystemConfiguration getDefaultSystemConfiguration() {
-        return systemConfigurations.getOrDefault("default", systemConfigurations.get(systemConfigurations.keySet().iterator().next()));
+        return systemConfigurations.getOrDefault("default", 
+        		systemConfigurations.get(systemConfigurations.keySet().iterator().next()));
     }
 
     public String getSystemConfigurationAsJson() {
