@@ -4,7 +4,7 @@
 	<groupId>au.org.uq</groupId>
     <artifactId>resource-server</artifactId>
     <packaging>jar</packaging>
-    <version>0.0.2</version>
+    <version>${release.version}</version>
 
 	<parent>
         <groupId>org.springframework.boot</groupId>
