@@ -56,6 +56,10 @@ public class ResourceServerApplication {
     	Option securityConfig = new Option("s", "securityconf", true, "Security Config");
     	securityConfig.setRequired(true);
         options.addOption(securityConfig);
+        // root context
+        Option rootContextConfig = new Option("r", "rootcontext", true, "Root Context");
+        rootContextConfig.setRequired(false);
+        options.addOption(rootContextConfig);
         
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
@@ -75,6 +79,7 @@ public class ResourceServerApplication {
         String bindingHostValue = cmd.getOptionValue("bindinghost", "localhost");
         String securityConfigFile = cmd.getOptionValue("securityconf", "ssh_authz_server.properties");
     	String tempDirStr = cmd.getOptionValue("tempdir", "/tmp/");
+    	String rootContext = cmd.getOptionValue("rootcontext", "/");
         ResourceServerSettings rsSettings = ResourceServerSettings.getInstance();
     	SecuritySettings securitySettings = SecuritySettings.getInstance();
     	try {
@@ -90,6 +95,7 @@ public class ResourceServerApplication {
     	rsSettings.setResourceServerHost(bindingHostValue);
     	rsSettings.setResourceServerProtocol(protocol);
     	rsSettings.setTempDir(tempDirStr);
+    	rsSettings.setRootContext(rootContext);
         SpringApplication.run(ResourceServerApplication.class, args);
     }
     
@@ -101,10 +107,10 @@ public class ResourceServerApplication {
 	@Bean
 	public EmbeddedServletContainerFactory tomcat() throws UnknownHostException {
 		ResourceServerSettings settings = ResourceServerSettings.getInstance();
-		TomcatEmbeddedServletContainerFactory myFactory = new TomcatEmbeddedServletContainerFactory();
+		TomcatEmbeddedServletContainerFactory myFactory = 
+				new TomcatEmbeddedServletContainerFactory(settings.getRootContext(), settings.getResourceServerPort());
 		myFactory.setAddress(InetAddress.getByName(settings.getResourceServerHost()));
 	    myFactory.setProtocol(settings.getResourceServerProtocol());
-	    myFactory.setPort(settings.getResourceServerPort());
 	    return myFactory;
 	}
 

@@ -22,6 +22,7 @@ public class ResourceServerSettings {
 	private String resourceServerProtocol = "";
 	private String remoteHost = "";
 	private String tempDir = "/tmp/";
+	private String rootContext  = "/";
 	
 	private ResourceServerSettings() {
 		CONFIGURATION_REGISTRY = new ConfigurationRegistry();
@@ -86,6 +87,7 @@ public class ResourceServerSettings {
         return CONFIGURATION_REGISTRY;
     }
 	
+	
 	public void setRemoteHost(String rHost) {
 		remoteHost = rHost;
 	}
@@ -104,5 +106,13 @@ public class ResourceServerSettings {
 	
 	public void setTempDir(String dir) {
 		this.tempDir = dir;
+	}
+	
+	public String getRootContext() {
+		return this.rootContext;
+	}
+	
+	public void setRootContext(String rContext) {
+		this.rootContext = rContext;
 	}
 }
