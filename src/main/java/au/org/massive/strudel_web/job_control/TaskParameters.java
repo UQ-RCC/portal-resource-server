@@ -1,6 +1,5 @@
 package au.org.massive.strudel_web.job_control;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,16 +14,30 @@ public class TaskParameters {
 	private final String resultRegexPattern;
 	private final Map<String,String> defaultParams;
 	private final Set<String> requiredParams;
-
+	private final String httpMethod;
+	
 	public TaskParameters(String remoteHost, String commandPattern,
-						  String resultRegexPattern, Map<String, String> defaultParams,
-						  Set<String> requiredParams) {
+			  String resultRegexPattern, Map<String, String> defaultParams,
+			  Set<String> requiredParams) {
 		super();
 		this.remoteHost = remoteHost;
 		this.commandPattern = commandPattern;
 		this.resultRegexPattern = resultRegexPattern;
 		this.defaultParams = defaultParams;
 		this.requiredParams = requiredParams;
+		this.httpMethod = "GET";
+	}
+		
+	public TaskParameters(String remoteHost, String commandPattern,
+						  String resultRegexPattern, Map<String, String> defaultParams,
+						  Set<String> requiredParams, String method) {
+		super();
+		this.remoteHost = remoteHost;
+		this.commandPattern = commandPattern;
+		this.resultRegexPattern = resultRegexPattern;
+		this.defaultParams = defaultParams;
+		this.requiredParams = requiredParams;
+		this.httpMethod = method;
 	}
 	public String getRemoteHost() {
 		return remoteHost;
@@ -40,5 +53,8 @@ public class TaskParameters {
 	}
 	public Set<String> getRequiredParams() {
 		return requiredParams;
+	}
+	public String getHttpMethod() {
+		return this.httpMethod;
 	}
 }

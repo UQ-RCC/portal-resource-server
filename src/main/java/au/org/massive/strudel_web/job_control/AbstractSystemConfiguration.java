@@ -53,12 +53,15 @@ public abstract class AbstractSystemConfiguration implements TaskConfiguration {
 //    }
 
     protected void addRemoteCommand(String jobName, Map<String, String> defaults,
-                                    String[] requiredParams, String commandPattern, String resultPattern) {
-        addRemoteCommand(getLoginHost(), jobName, defaults, requiredParams, commandPattern, resultPattern);
+                                    String[] requiredParams, String commandPattern, 
+                                    String resultPattern) {
+        addRemoteCommand(getLoginHost(), jobName, defaults, requiredParams, 
+        		commandPattern, resultPattern);
     }
 
     protected void addRemoteCommand(String host, String jobName, Map<String, String> defaults,
-                                    String[] requiredParams, String commandPattern, String resultPattern) {
+                                    String[] requiredParams, String commandPattern, 
+                                    String resultPattern) {
 
         Set<String> requiredParamsSet;
         if (requiredParams == null || requiredParams.length == 0) {

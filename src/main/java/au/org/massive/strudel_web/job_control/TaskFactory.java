@@ -49,8 +49,20 @@ public class TaskFactory {
         private final String resultRegexPattern;
         private final Map<String, String> defaultParams;
         private final Set<String> requiredParams;
-
-        private Task(SSHClient sshClient, String commandPattern, String resultRegexPattern, Map<String, String> defaultParams, Set<String> requiredParams) {
+        
+        private Task(SSHClient sshClient, String commandPattern, 
+        		String resultRegexPattern, Map<String, String> defaultParams, 
+        		Set<String> requiredParams) {
+            this.sshClient = sshClient;
+            this.commandPattern = commandPattern;
+            this.resultRegexPattern = resultRegexPattern;
+            this.defaultParams = defaultParams;
+            this.requiredParams = requiredParams;
+        }
+        
+        private Task(SSHClient sshClient, String commandPattern, 
+        		String resultRegexPattern, Map<String, String> defaultParams, 
+        		Set<String> requiredParams, String method) {
             this.sshClient = sshClient;
             this.commandPattern = commandPattern;
             this.resultRegexPattern = resultRegexPattern;
@@ -65,7 +77,10 @@ public class TaskFactory {
             return new TaskResult<>(messages, processedCmdResult);
         }
 
-        private String createCommand(String commandPattern, Map<String, String> params, Map<String, String> defaultParams, Set<String> requiredParams) throws MissingRequiredTaskParametersException {
+        private String createCommand(String commandPattern, 
+        		Map<String, String> params, 
+        		Map<String, String> defaultParams, 
+        		Set<String> requiredParams) throws MissingRequiredTaskParametersException {
             if (requiredParams != null) {
                 // Verify all required parameters are present
                 Set<String> suppliedParams = new HashSet<>();

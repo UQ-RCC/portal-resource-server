@@ -11,6 +11,7 @@ import au.org.massive.strudel_web.vnc.GuacamoleSession;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
 import au.org.rcc.miscs.ResourceServerSettings;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Controller;
@@ -19,12 +20,18 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonParser;
+import com.google.gson.reflect.TypeToken;
+
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.BufferedReader;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -36,7 +43,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 
 /**
  * Endpoints for all the jobs
@@ -51,38 +57,42 @@ public class JobControlEndpoints{
     private static final Logger logger = LogManager.getLogger(JobControlEndpoints.class);
     
     
-    @RequestMapping(method = RequestMethod.GET, value = "/api/execute/{task}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE}, 
+    				value = "/api/execute/{task}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob0( 
     						HttpServletRequest request,
     						HttpServletResponse response,
     						Authentication auth,
-    						@PathVariable final String task) throws IOException, SSHExecException, SQLException {
+    						@PathVariable final String task) throws IOException, SSHExecException, SQLException, NoSuchTaskTypeException {
     	return executeJob(request, response, auth, task, null, 0);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/api/execute/{task}/on/{host}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE },
+    				value = "/api/execute/{task}/on/{host}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob1( 
 							HttpServletRequest request,
 							HttpServletResponse response,
 							Authentication auth,
-    						@PathVariable final String task) throws IOException, SSHExecException, SQLException {
+    						@PathVariable final String task) throws IOException, SSHExecException, SQLException, NoSuchTaskTypeException {
         return executeJob(request, response, auth, task, null, 0);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/api/execute/{task}/in/{configuration}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE }, 
+    				value = "/api/execute/{task}/in/{configuration}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob2(
 							HttpServletRequest request,
 							HttpServletResponse response,	
 							Authentication auth,
 				    		@PathVariable final String task, 
-    						@PathVariable final String configuration) throws IOException, SSHExecException, SQLException {
+    						@PathVariable final String configuration) throws IOException, SSHExecException, SQLException, NoSuchTaskTypeException {
         return executeJob(request, response, auth, task, configuration, 0);
     }
 
-    @RequestMapping(method = RequestMethod.GET, value = "/api/execute/{task}/in/{configuration}/on/{host}")
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE }, 
+    				value = "/api/execute/{task}/in/{configuration}/on/{host}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob(
     						 HttpServletRequest request,
@@ -90,7 +100,7 @@ public class JobControlEndpoints{
     						 Authentication auth,
     						 @PathVariable final String task,
     						 @PathVariable final String configuration,
-    						 @RequestParam(value="retries", defaultValue="0") Integer retries)throws IOException, SSHExecException, SQLException {
+    						 @RequestParam(value="retries", defaultValue="0") Integer retries)throws IOException, SSHExecException, SQLException, NoSuchTaskTypeException {
         // check auth
     	OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
         Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
@@ -108,32 +118,45 @@ public class JobControlEndpoints{
             return null;
         }
 
+        if(!request.getMethod().equalsIgnoreCase(systemConfiguration.findByTaskType(task).getHttpMethod())) {
+        	response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method " + request.getMethod()+ " not allowed");
+            return null;
+        }
         Task remoteTask;
         try {
         	CertAuthInfo certAuth = CertAuthManager.getInstance().getCertAuth(username);
-            	remoteTask = new TaskFactory(systemConfiguration).getInstance(task, certAuth, host);
-            	Map<String, String> parameters = new HashMap<>();
+        	remoteTask = new TaskFactory(systemConfiguration).getInstance(task, certAuth, host);
+        	Map<String, String> parameters = new HashMap<>();
+        	if( RequestMethod.valueOf(request.getMethod()) == RequestMethod.GET) {
             	for (String key : request.getParameterMap().keySet()) {
                 	String value = request.getParameterMap().get(key)[0]; // Only one value is accepted
                 	parameters.put(key, value);
+            	}        		
+        	} else {
+        		Map<String, String> values = new Gson().fromJson(
+        			    request.getReader(), new TypeToken<HashMap<String, String>>() {}.getType()
+        		);
+        		for (String key : values.keySet()) {
+                	parameters.put(key, (String)values.get(key));
             	}
-            	try {
-            		TaskResult<List<Map<String, String>>> result = remoteTask.run(parameters);
-                	logger.info("Successfully executed task \"" + task + "\" on \"" + host + "\" from configuration \"" + configuration + "\" for " + request.getUserPrincipal());
-                	return result;
-            	} catch (MissingRequiredTaskParametersException e) {
-            		e.printStackTrace();
-                	response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-                	return null;
-            	} catch (SSHExecException e1) {
-                	// If this request fails, try using the default remote host
-                	if (retries < 1 && (systemConfiguration.findByTaskType(task).getRemoteHost() !=null) 
-                			&& !systemConfiguration.findByTaskType(task).getRemoteHost().isEmpty()) {
-                 	   return executeJob(request, response, auth, task, configuration, 1);
-                	} else {
-                    	throw e1;
-                }
-            }
+        	}
+        	try {
+        		TaskResult<List<Map<String, String>>> result = remoteTask.run(parameters);
+            	logger.info("Successfully executed task \"" + task + "\" on \"" + host + "\" from configuration \"" + configuration + "\" for " + request.getUserPrincipal());
+            	return result;
+        	} catch (MissingRequiredTaskParametersException e) {
+        		e.printStackTrace();
+            	response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            	return null;
+        	} catch (SSHExecException e1) {
+            	// If this request fails, try using the default remote host
+            	if (retries < 1 && (systemConfiguration.findByTaskType(task).getRemoteHost() !=null) 
+            			&& !systemConfiguration.findByTaskType(task).getRemoteHost().isEmpty()) {
+             	   return executeJob(request, response, auth, task, configuration, 1);
+            	} else {
+                	throw e1;
+            	}
+        	}
         } catch (NoSuchTaskTypeException e) {
         	e.printStackTrace();
         	response.sendError(HttpServletResponse.SC_NOT_FOUND);
@@ -226,7 +249,7 @@ public class JobControlEndpoints{
     	OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
         Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
         String username = details.get("username").toString();
-	logger.info("@stopVncTunnel:" + username);
+        logger.info("@stopVncTunnel:" + username);
         if(username == null) {
         	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
             return null;
@@ -266,7 +289,7 @@ public class JobControlEndpoints{
     	OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
         Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
         String username = details.get("username").toString();
-	logger.info("@listVncTunnel:" + username);
+        logger.info("@listVncTunnel:" + username);
         if(username == null) {
         	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
             return null;

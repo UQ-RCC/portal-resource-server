@@ -22,7 +22,7 @@ public class ResourceServerSettings {
 	private String resourceServerProtocol = "";
 	private String remoteHost = "";
 	private String tempDir = "/tmp/";
-	private String rootContext  = "/";
+	private String rootContext  = "";
 	
 	private ResourceServerSettings() {
 		CONFIGURATION_REGISTRY = new ConfigurationRegistry();

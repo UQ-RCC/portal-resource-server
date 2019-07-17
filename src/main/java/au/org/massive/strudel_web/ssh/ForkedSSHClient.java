@@ -49,10 +49,6 @@ public class ForkedSSHClient extends AbstractSSHClient {
         this.authInfo = authInfo;
     }
 
-    /**
-     * Hoang: comment out certFile
-     *
-     */
     private class CertFiles implements Closeable {
         private final File tempDirectory;
         private final File privKeyFile;
@@ -63,7 +59,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
             super();
             Path defaultPath = FileSystems.getDefault().getPath(ResourceServerSettings.getInstance().getTempDir());
             Path tempDirectoryPath = 
-            		Files.createTempDirectory(defaultPath, "coesra-" + authInfo.getUserName());
+            Files.createTempDirectory(defaultPath, "coesra-" + authInfo.getUserName());
             privKeyFile = tempDirectoryPath.resolve("id_rsa").toFile();
             privKeyFile.createNewFile();
             

@@ -106,7 +106,7 @@ public class StrudelDesktopConfigurationAdapter extends HashMap<String, JsonSyst
         
         Map<String, String> defaults = null;
         // Get defaults
-        if(config.containsKey("deaults")) {
+        if(config.containsKey("defaults")) {
             @SuppressWarnings("unchecked") Map<String, Object> jobDefaults = (Map<String, Object>) config.get("defaults");
             final int jobHours = ((Double) jobDefaults.get("jobParams_hours")).intValue();
             final int jobMem = ((Double) jobDefaults.get("jobParams_mem")).intValue();
@@ -137,7 +137,8 @@ public class StrudelDesktopConfigurationAdapter extends HashMap<String, JsonSyst
         Map<String, Object> tasks = new HashMap<>();
         parsedConfig.put("tasks", tasks);
         // iterate through tasks
-        @SuppressWarnings("unchecked") Map<String, Object> specifiedCmds = ((Map<String,Object>)config.get("Commands"));
+        @SuppressWarnings("unchecked") Map<String, Object> specifiedCmds = 
+        		((Map<String,Object>)config.get("Commands"));
 	    for(String function: specifiedCmds.keySet()) {
 	    	//TODO: this is coesra specific thing - to remove it.
 	    	if(function.equals("startServer") && defaults != null)
@@ -183,6 +184,7 @@ public class StrudelDesktopConfigurationAdapter extends HashMap<String, JsonSyst
         function.put("resultPattern", getResultPattern(functionName, config));
         function.put("required", getCommandPatternFields(cmdPattern));
         function.put("defaults", defaults);
+        // Hoang: TODO: put method here: GET/PUT/POST/DELETE
 
         // The exec host is not known in advance, so if the command is to be targeted on the exec host, set the remote host as an empty string.
         // This will require the API endpoint to include a remote host - it becomes the client's responsibility to know this in advnace.

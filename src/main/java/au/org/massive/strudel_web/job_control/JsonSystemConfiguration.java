@@ -75,7 +75,7 @@ public class JsonSystemConfiguration extends AbstractSystemConfiguration {
                 addMessageRegex(pattern);
             }
         }
-
+        // Hoang: TODO: add HTTP method to tasks
         Map<String, Map<String, Object>> tasks = (Map<String, Map<String, Object>>) config.get("tasks");
         for (String taskName : tasks.keySet()) {
 
@@ -110,12 +110,18 @@ public class JsonSystemConfiguration extends AbstractSystemConfiguration {
                 throw new InvalidJsonConfigurationException("JSON configuration for task '" + taskName + "' must define 'resultPattern'");
             }
 
+            String httpMethod = "GET";
+            List<String> acceptedMethods = Arrays.asList("GET", "POST", "DELETE");
+            if(task.containsKey("method") 
+            		&& acceptedMethods.contains(task.get("method").toString().toUpperCase()))
+            	httpMethod = task.get("method").toString().toUpperCase();
             TaskParameters taskParameters = new TaskParameters(
                     remoteHost,
                     commandPattern,
                     resultsPattern,
                     defaults,
-                    requiredParams
+                    requiredParams, 
+                    httpMethod
             );
 
             addRemoteCommand(taskName, taskParameters);

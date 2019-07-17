@@ -79,7 +79,7 @@ public class ResourceServerApplication {
         String bindingHostValue = cmd.getOptionValue("bindinghost", "localhost");
         String securityConfigFile = cmd.getOptionValue("securityconf", "ssh_authz_server.properties");
     	String tempDirStr = cmd.getOptionValue("tempdir", "/tmp/");
-    	String rootContext = cmd.getOptionValue("rootcontext", "/");
+    	String rootContext = cmd.getOptionValue("rootcontext", "");
         ResourceServerSettings rsSettings = ResourceServerSettings.getInstance();
     	SecuritySettings securitySettings = SecuritySettings.getInstance();
     	try {
