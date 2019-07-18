@@ -127,19 +127,10 @@ public class JobControlEndpoints{
         	CertAuthInfo certAuth = CertAuthManager.getInstance().getCertAuth(username);
         	remoteTask = new TaskFactory(systemConfiguration).getInstance(task, certAuth, host);
         	Map<String, String> parameters = new HashMap<>();
-        	if( RequestMethod.valueOf(request.getMethod()) == RequestMethod.GET) {
-            	for (String key : request.getParameterMap().keySet()) {
-                	String value = request.getParameterMap().get(key)[0]; // Only one value is accepted
-                	parameters.put(key, value);
-            	}        		
-        	} else {
-        		Map<String, String> values = new Gson().fromJson(
-        			    request.getReader(), new TypeToken<HashMap<String, String>>() {}.getType()
-        		);
-        		for (String key : values.keySet()) {
-                	parameters.put(key, (String)values.get(key));
-            	}
-        	}
+        	for (String key : request.getParameterMap().keySet()) {
+            	String value = request.getParameterMap().get(key)[0]; // Only one value is accepted
+            	parameters.put(key, value);
+        	}  
         	try {
         		TaskResult<List<Map<String, String>>> result = remoteTask.run(parameters);
             	logger.info("Successfully executed task \"" + task + "\" on \"" + host + "\" from configuration \"" + configuration + "\" for " + request.getUserPrincipal());
