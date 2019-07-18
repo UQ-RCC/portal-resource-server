@@ -111,7 +111,7 @@ public class JsonSystemConfiguration extends AbstractSystemConfiguration {
             }
 
             String httpMethod = "GET";
-            List<String> acceptedMethods = Arrays.asList("GET", "POST", "DELETE");
+            List<String> acceptedMethods = Arrays.asList("GET", "POST");
             if(task.containsKey("method") 
             		&& acceptedMethods.contains(task.get("method").toString().toUpperCase()))
             	httpMethod = task.get("method").toString().toUpperCase();

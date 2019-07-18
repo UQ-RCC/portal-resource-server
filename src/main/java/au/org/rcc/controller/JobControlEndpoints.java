@@ -57,7 +57,7 @@ public class JobControlEndpoints{
     private static final Logger logger = LogManager.getLogger(JobControlEndpoints.class);
     
     
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE}, 
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST}, 
     				value = "/api/execute/{task}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob0( 
@@ -68,7 +68,7 @@ public class JobControlEndpoints{
     	return executeJob(request, response, auth, task, null, 0);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE },
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST},
     				value = "/api/execute/{task}/on/{host}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob1( 
@@ -79,7 +79,7 @@ public class JobControlEndpoints{
         return executeJob(request, response, auth, task, null, 0);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE }, 
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST}, 
     				value = "/api/execute/{task}/in/{configuration}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob2(
@@ -91,7 +91,7 @@ public class JobControlEndpoints{
         return executeJob(request, response, auth, task, configuration, 0);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE }, 
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST}, 
     				value = "/api/execute/{task}/in/{configuration}/on/{host}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob(
