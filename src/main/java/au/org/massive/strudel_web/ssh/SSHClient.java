@@ -17,7 +17,7 @@ public interface SSHClient {
     String exec(String remoteCommands) throws IOException, SSHExecException, UnsupportedKeyException;
 
     String exec(String remoteCommands, ExecuteWatchdog watchdog) throws IOException, SSHExecException, UnsupportedKeyException;
-
+    
     AsyncCommand<String> execAsync(String remoteCommands);
 
     class AsyncCommand<T> {

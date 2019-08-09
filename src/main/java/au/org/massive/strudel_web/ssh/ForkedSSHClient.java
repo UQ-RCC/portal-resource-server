@@ -193,7 +193,8 @@ public class ForkedSSHClient extends AbstractSSHClient {
      * @throws SSHExecException thrown on errors caused during SSH command execution
      * @throws UnsupportedKeyException 
      */
-    public String exec(String remoteCommands, Map<String, String> extraFlags, ExecuteWatchdog watchdog) throws IOException, SSHExecException, UnsupportedKeyException {
+    public String exec(String remoteCommands, Map<String, String> extraFlags, ExecuteWatchdog watchdog) 
+    		throws IOException, SSHExecException, UnsupportedKeyException {
         CertFiles certFiles = new CertFiles(authInfo);
 
         CommandLine cmdLine = new CommandLine("ssh");
@@ -205,6 +206,10 @@ public class ForkedSSHClient extends AbstractSSHClient {
         cmdLine.addArgument("-oStrictHostKeyChecking=no"); // TODO: Remove me when ready
         cmdLine.addArgument("-oBatchMode=yes");
         cmdLine.addArgument("-oKbdInteractiveAuthentication=no");
+        cmdLine.addArgument("-oControlMaster=auto");
+        cmdLine.addArgument("-oControlPersist=15m");
+        String sshConnection = "ssh://" + getAuthInfo().getUserName() + "@" + getViaGateway();
+        cmdLine.addArgument("-oControlPath=/run/resource-server-" + sshConnection.hashCode());
         cmdLine.addArgument("-l");
         cmdLine.addArgument(getAuthInfo().getUserName());
         cmdLine.addArgument(getViaGateway());
@@ -246,5 +251,5 @@ public class ForkedSSHClient extends AbstractSSHClient {
         }
         return output.toString();
     }
-
+    
 }
