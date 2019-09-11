@@ -145,17 +145,19 @@ public class JobControlEndpoints{
             			&& !systemConfiguration.findByTaskType(task).getRemoteHost().isEmpty()) {
              	   return executeJob(request, response, auth, task, configuration, 1);
             	} else {
-                	throw e1;
+            		e1.printStackTrace();
+                    response.sendError(HttpServletResponse.SC_NOT_MODIFIED, e1.getMessage());
+                    return null;
             	}
         	}
         } catch (NoSuchTaskTypeException e) {
         	e.printStackTrace();
-        	response.sendError(HttpServletResponse.SC_NOT_FOUND);
+        	response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             return null;
         }
         catch(Exception e) {
         	e.printStackTrace();
-            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return null;
         }
 
