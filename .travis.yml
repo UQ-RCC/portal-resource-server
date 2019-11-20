@@ -1,7 +1,16 @@
 language: java
-jdk:
-- openjdk11
-script: mvn install -Drelease.version=$(git describe --tags --abbrev=0) -DskipTests=true -Dmaven.javadoc.skip=true -B -V
+jdk: openjdk11
+before_cache:
+  - rm -f  $HOME/.gradle/caches/modules-2/modules-2.lock
+  - rm -fr $HOME/.gradle/caches/*/plugin-resolution/
+cache:
+  directories:
+    - $HOME/.gradle/caches/
+    - $HOME/.gradle/wrapper
+
+script:
+  - ./gradlew distTar
+
 install: true
 deploy:
   provider: releases
@@ -9,7 +18,7 @@ deploy:
     secure: "sB3nMGcF95Jbv8K5S10a3zNXD/OfX9xNmvtv4kR21xVEj7snEnwJ4TfUWTjwMdebDw7CororvLePucTEbRC+IITCyH46Pihg1EZFw5shosHQzHpbek8OxyrcUbOjC/IFJqOLYqbAjsR3YMkuoIN2UflR+2uii9nyteGDXHuOQ+tyTiaWs64AS4swq4yy5lKgaqdNEnFN+R1/4V2jKZYpPKEkhmNr+Nkl0d+mOQw+1161wrYMQIy1znb24qYX2rDZzL7GzbzTmg+hf1fFLRV56i4dVRMj9amnyGfXJdRukMmfG+ISUAH71CDlF1W1Zr9vJOKMpRqcVHNrJkJpns7SUuOZn8Q3t/e0P8iTWmGvcDo9AniBDJSKopw2WUui0km7DwQex3HmYwzw9GKR3BINYsT/Lre560JH+PJbG9mShCaQOMJDqHTeqFDYCLhBrGfcNVZjQViZcqT+SRHyM9E7zRBYTvHtMrWmDVVeFEUpaRv0STRJZFgMV4Ic2XOh6ujmXS+pnMbcS+w07ptFhOCnjj/pP85XopRCHOfcIoAtiqvLJbvFtdVuIO4TfUJQGkSnVgeMvtigAgX37N1Ta4ylcpZxD04pkBGrTzV5XhybqP/7OMJmkQ2cYBbBkDhejV2tArDW+4uaygDW8qqpPhA/OYhiEGPB66AQtKwn8bQbKKU="
   skip_cleanup: true
   file_glob: true
-  file: target/resource-server-*.jar
+  file: target/resource-server-*.tar.gz
   draft: false
   overwrite: true
   on:

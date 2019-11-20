@@ -6,6 +6,3 @@
 **/.vscode
 **/.settings
 /target
-/gradlew
-/gradlew.bat
-/gradle/

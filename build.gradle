@@ -1,12 +1,32 @@
+buildscript {
+	repositories {
+		mavenCentral()
+	}
+
+	dependencies {
+		classpath 'org.ajoberstar:grgit:1.1.0'
+	}
+}
+
 plugins {
 	id 'java'
 	id 'application'
 	id 'distribution'
+	id 'fr.brouillard.oss.gradle.jgitver' version '0.8.0'
+}
+
+jgitver {
+	useDistance true
+	useGitCommitID true
+	useDirty true
+	autoIncrementPatch false
 }
 
 repositories {
 	mavenCentral()
 }
+
+mainClassName = 'au.org.massive.rcc.ResourceServerApplication'
 
 sourceCompatibility = 11
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
@@ -54,4 +74,14 @@ dependencies {
 	testImplementation 'junit:junit:4.12'
 }
 
-mainClassName = 'au.org.massive.rcc.ResourceServerApplication'
+distributions {
+	main {
+		baseName 'resource-server'
+		distZip.enabled false
+	}
+}
+
+distTar {
+	compression Compression.GZIP
+	extension 'tar.gz' /* Not .tgz */
+}
