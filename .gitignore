@@ -1,1 +1,11 @@
-/target/
+**/.gradle
+**/build
+**/.classpath
+**/.project
+**/.idea/
+**/.vscode
+**/.settings
+/target
+/gradlew
+/gradlew.bat
+/gradle/

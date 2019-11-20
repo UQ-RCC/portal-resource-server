@@ -12,8 +12,7 @@ import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.embedded.EmbeddedServletContainerFactory;
-import org.springframework.boot.context.embedded.tomcat.TomcatEmbeddedServletContainerFactory;
+import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
 
 import au.org.rcc.miscs.ResourceServerSettings;
@@ -105,14 +104,12 @@ public class ResourceServerApplication {
 	 * @return a configured container factory
 	 */
 	@Bean
-	public EmbeddedServletContainerFactory tomcat() throws UnknownHostException {
+	public TomcatServletWebServerFactory tomcat() throws UnknownHostException {
 		ResourceServerSettings settings = ResourceServerSettings.getInstance();
-		TomcatEmbeddedServletContainerFactory myFactory = 
-				new TomcatEmbeddedServletContainerFactory(settings.getRootContext(), settings.getResourceServerPort());
-		myFactory.setAddress(InetAddress.getByName(settings.getResourceServerHost()));
-	    myFactory.setProtocol(settings.getResourceServerProtocol());
-	    return myFactory;
-	}
 
-	
+		TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory(settings.getRootContext(), settings.getResourceServerPort());
+		factory.setAddress(InetAddress.getByName(settings.getResourceServerHost()));
+		factory.setProtocol(settings.getResourceServerProtocol());
+		return factory;
+	}
 }
