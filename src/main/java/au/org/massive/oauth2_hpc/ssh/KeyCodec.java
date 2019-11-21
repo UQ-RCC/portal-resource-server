@@ -8,6 +8,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.nio.file.Files;
 import java.security.KeyPair;
 
 import org.apache.log4j.Logger;
@@ -38,11 +39,7 @@ public class KeyCodec {
 	 * @return file content as a byte array
 	 */
 	protected static byte[] readFile(File file) throws IOException {
-		FileInputStream fileInputStream = new FileInputStream(file);
-		byte[] data = new byte[(int) file.length()];
-		fileInputStream.read(data);
-		fileInputStream.close();
-		return data;
+		return Files.readAllBytes(file.toPath());
 	}
 	
 	/**
