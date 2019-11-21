@@ -2,6 +2,7 @@ package au.org.rcc;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.security.Security;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -10,6 +11,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
@@ -95,6 +97,8 @@ public class ResourceServerApplication {
     	rsSettings.setResourceServerProtocol(protocol);
     	rsSettings.setTempDir(tempDirStr);
     	rsSettings.setRootContext(rootContext);
+
+		Security.addProvider(new BouncyCastleProvider());
         SpringApplication.run(ResourceServerApplication.class, args);
     }
     
