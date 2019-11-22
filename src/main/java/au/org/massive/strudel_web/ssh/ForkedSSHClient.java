@@ -10,6 +10,7 @@ import java.net.ServerSocket;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -223,6 +224,11 @@ public class ForkedSSHClient extends AbstractSSHClient {
     		throws IOException, SSHExecException, UnsupportedKeyException {
         CertFiles certFiles = new CertFiles(authInfo);
 
+		String sshConnection = "ssh://" + getAuthInfo().getUserName() + "@" + getViaGateway();
+
+		/* Probably the wrong place for this, but good enough for now. */
+        Path socketPath = Paths.get(ResourceServerSettings.getInstance().getTempDir()).resolve(String.format("resource-server-%d", sshConnection.hashCode()));
+
         CommandLine cmdLine = new CommandLine("ssh");
         //cmdLine.addArgument("-q");
         cmdLine.addArgument("-q");
@@ -234,8 +240,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
         cmdLine.addArgument("-oKbdInteractiveAuthentication=no");
         cmdLine.addArgument("-oControlMaster=auto");
         cmdLine.addArgument("-oControlPersist=15m");
-        String sshConnection = "ssh://" + getAuthInfo().getUserName() + "@" + getViaGateway();
-        cmdLine.addArgument("-oControlPath=/run/resource-server-" + sshConnection.hashCode());
+        cmdLine.addArgument(String.format("-oControlPath=%s", socketPath));
         cmdLine.addArgument("-l");
         cmdLine.addArgument(getAuthInfo().getUserName());
         cmdLine.addArgument(getViaGateway());
@@ -258,6 +263,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
         } else {
             remoteCommands = "";
         }
+
 
         Gson gson = new GsonBuilder()
                 .enableComplexMapKeySerialization()
