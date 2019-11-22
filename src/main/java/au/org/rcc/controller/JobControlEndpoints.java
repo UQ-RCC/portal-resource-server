@@ -148,11 +148,12 @@ public class JobControlEndpoints{
 			HashMap<String, String[]> sparam = new HashMap<>(request.getParameterMap());
 			sparam.put("access_token", new String[0]);
 
-			logMap.put("request", Map.of(
-					"uri", request.getRequestURI(),
-					"parameters", sparam,
-					"headers", headers
-			));
+			Map<String, Object> tmpMap = new HashMap<>();
+			tmpMap.put("uri", request.getRequestURI());
+			tmpMap.put("parameters", sparam);
+			tmpMap.put("headers", headers);
+
+			logMap.put("request", tmpMap);
 		}
 
 		Map<String, Object> logMapResponse = new HashMap<>();
@@ -180,7 +181,7 @@ public class JobControlEndpoints{
 					if(result.hasUserMessages()) {
 						rmap.put("user_messages", result.getUserMessages());
 					} else {
-						rmap.put("user_messages", List.of());
+						rmap.put("user_messages", Collections.EMPTY_LIST);
 					}
 
 					rmap.put("command_result", result.getCommandResult());
