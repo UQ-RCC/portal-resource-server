@@ -204,7 +204,6 @@ public class ForkedSSHClient extends AbstractSSHClient {
 		if(args.isEmpty()) {
 			args.add("bash");
 			args.add("-s");
-			args.add("--");
 		}
 		return args.stream().toArray(String[]::new);
 	}
@@ -254,6 +253,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
 
         boolean hasCommands = remoteCommands != null && remoteCommands.length() > 0;
         if (hasCommands) {
+			cmdLine.addArgument("--");
 			cmdLine.addArguments(disgustingCustomShellHack());
         } else {
             remoteCommands = "";
