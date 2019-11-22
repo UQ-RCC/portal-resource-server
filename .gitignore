@@ -6,3 +6,7 @@
 **/.vscode
 **/.settings
 /target
+/nimrod.json
+/wiener.json
+/hpcportal.json
+/hpcrs_security.properties

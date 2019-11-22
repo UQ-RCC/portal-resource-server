@@ -11,12 +11,15 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.exec.CommandLine;
 import org.apache.commons.exec.ExecuteException;
 import org.apache.commons.exec.ExecuteWatchdog;
@@ -27,6 +30,8 @@ import org.apache.logging.log4j.Logger;
 
 import au.org.massive.strudel_web.util.UnsupportedKeyException;
 import au.org.rcc.miscs.ResourceServerSettings;
+import org.codehaus.jackson.annotate.JsonManagedReference;
+
 /**
  * A non-native SSH client implmentation that forks SSH processes for each request.
  * Depends on an SSH binary in the search path. Certificates are written to disk at the beginning of each command
@@ -234,6 +239,18 @@ public class ForkedSSHClient extends AbstractSSHClient {
             remoteCommands = "";
         }
 
+        Gson gson = new GsonBuilder()
+                .enableComplexMapKeySerialization()
+                //.setPrettyPrinting()
+                .create();
+
+        Map<String, Object> logMap = new HashMap<>();
+        logMap.put("timestamp", Instant.now().toString());
+        logMap.put("type", "ssh");
+        logMap.put("user", getAuthInfo().getUserName());
+        logMap.put("command", cmdLine.getArguments());
+        logMap.put("input", remoteCommands);
+
         ByteArrayInputStream input = new ByteArrayInputStream(remoteCommands.getBytes());
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         Executor exec = getForkedProcessExecutor(watchdog);
@@ -247,6 +264,8 @@ public class ForkedSSHClient extends AbstractSSHClient {
                          "Remote server said: " + output.toString());
             throw new SSHExecException(output.toString(), e);
         } finally {
+            logMap.put("output", output.toString());
+            logger.info("AUDIT: {}", gson.toJson(logMap));
             certFiles.close();
         }
         return output.toString();

@@ -11,6 +11,7 @@ import au.org.massive.strudel_web.vnc.GuacamoleSession;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
 import au.org.rcc.miscs.ResourceServerSettings;
 
+import com.google.gson.GsonBuilder;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,7 +39,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 import java.security.SignatureException;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -109,6 +113,7 @@ public class JobControlEndpoints{
         	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
             return null;
         }
+
     	String host = settings.getRemoteHost();
     	ConfigurationRegistry systemConfigurations = settings.getSystemConfigurations();
         AbstractSystemConfiguration systemConfiguration = 
@@ -122,6 +127,40 @@ public class JobControlEndpoints{
         	response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method " + request.getMethod()+ " not allowed");
             return null;
         }
+		Gson gson = new GsonBuilder()
+				.enableComplexMapKeySerialization()
+				//.setPrettyPrinting()
+				.create();
+
+		Map<String, Object> logMap = new HashMap<>();
+		logMap.put("timestamp", Instant.now().toString());
+		logMap.put("type", "request");
+
+		{
+			Map<String, List<String>> headers = new HashMap<>();
+
+			Enumeration<String> hnames = request.getHeaderNames();
+			while(hnames.hasMoreElements()) {
+				String name = hnames.nextElement();
+				headers.put(name, Collections.list(request.getHeaders(name)));
+			}
+
+			HashMap<String, String[]> sparam = new HashMap<>(request.getParameterMap());
+			sparam.put("access_token", new String[0]);
+
+			logMap.put("request", Map.of(
+					"uri", request.getRequestURI(),
+					"parameters", sparam,
+					"headers", headers
+			));
+		}
+
+		Map<String, Object> logMapResponse = new HashMap<>();
+		logMapResponse.put("code", HttpServletResponse.SC_OK);
+		logMapResponse.put("message", "OK");
+
+    	logMap.put("response", logMapResponse);
+
         Task remoteTask;
         try {
         	CertAuthInfo certAuth = CertAuthManager.getInstance().getCertAuth(username);
@@ -130,13 +169,29 @@ public class JobControlEndpoints{
         	for (String key : request.getParameterMap().keySet()) {
             	String value = request.getParameterMap().get(key)[0]; // Only one value is accepted
             	parameters.put(key, value);
-        	}  
+        	}
+
         	try {
         		TaskResult<List<Map<String, String>>> result = remoteTask.run(parameters);
             	logger.info("Successfully executed task \"" + task + "\" on \"" + host + "\" from configuration \"" + configuration + "\" for " + request.getUserPrincipal());
+
+				{
+					Map<String, Object> rmap = new HashMap<>();
+					if(result.hasUserMessages()) {
+						rmap.put("user_messages", result.getUserMessages());
+					} else {
+						rmap.put("user_messages", List.of());
+					}
+
+					rmap.put("command_result", result.getCommandResult());
+
+					logMap.put("result", rmap);
+				}
             	return result;
         	} catch (MissingRequiredTaskParametersException e) {
         		e.printStackTrace();
+				logMapResponse.put("code", HttpServletResponse.SC_BAD_REQUEST);
+				logMapResponse.put("message", e.getMessage());
             	response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
             	return null;
         	} catch (SSHExecException e1) {
@@ -146,20 +201,28 @@ public class JobControlEndpoints{
              	   return executeJob(request, response, auth, task, configuration, 1);
             	} else {
             		e1.printStackTrace();
+					logMapResponse.put("code", HttpServletResponse.SC_NOT_MODIFIED);
+					logMapResponse.put("message", e1.getMessage());
                     response.sendError(HttpServletResponse.SC_NOT_MODIFIED, e1.getMessage());
                     return null;
             	}
         	}
         } catch (NoSuchTaskTypeException e) {
         	e.printStackTrace();
+			logMapResponse.put("code", HttpServletResponse.SC_NOT_FOUND);
+			logMapResponse.put("message", e.getMessage());
         	response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
             return null;
         }
         catch(Exception e) {
         	e.printStackTrace();
+			logMapResponse.put("code", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			logMapResponse.put("message", e.getMessage());
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return null;
-        }
+        } finally {
+			logger.info("AUDIT: {}", gson.toJson(logMap));
+		}
 
     }
 
