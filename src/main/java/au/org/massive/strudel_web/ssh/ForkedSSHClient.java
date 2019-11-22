@@ -12,8 +12,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -187,6 +189,26 @@ public class ForkedSSHClient extends AbstractSSHClient {
         return exec(remoteCommands, null, watchdog);
     }
 
+    private static String[] disgustingCustomShellHack() {
+		List<String> args = new ArrayList<>();
+
+		for(int i = 0;; ++i) {
+			String arg = System.getProperty(String.format("portal.ssh_shell.%d", i));
+			if(arg == null) {
+				break;
+			}
+
+			args.add(arg);
+		}
+
+		if(args.isEmpty()) {
+			args.add("bash");
+			args.add("-s");
+			args.add("--");
+		}
+		return args.stream().toArray(String[]::new);
+	}
+
     /**
      * Exeucte a remote command
      *
@@ -232,9 +254,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
 
         boolean hasCommands = remoteCommands != null && remoteCommands.length() > 0;
         if (hasCommands) {
-            cmdLine.addArgument("bash");
-            cmdLine.addArgument("-s");
-            cmdLine.addArgument("--");
+			cmdLine.addArguments(disgustingCustomShellHack());
         } else {
             remoteCommands = "";
         }
