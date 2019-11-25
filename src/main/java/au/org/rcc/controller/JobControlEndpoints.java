@@ -127,10 +127,13 @@ public class JobControlEndpoints{
         	response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method " + request.getMethod()+ " not allowed");
             return null;
         }
-		Gson gson = new GsonBuilder()
-				.enableComplexMapKeySerialization()
-				//.setPrettyPrinting()
-				.create();
+
+		Map<String, String> parameters = new HashMap<>();
+		for (String key : request.getParameterMap().keySet()) {
+			String value = request.getParameterMap().get(key)[0]; // Only one value is accepted
+			parameters.put(key, value);
+		}
+		parameters.remove("access_token");
 
 		Map<String, Object> logMap = new HashMap<>();
 		logMap.put("timestamp", Instant.now().toString());
@@ -145,12 +148,9 @@ public class JobControlEndpoints{
 				headers.put(name, Collections.list(request.getHeaders(name)));
 			}
 
-			HashMap<String, String[]> sparam = new HashMap<>(request.getParameterMap());
-			sparam.put("access_token", new String[0]);
-
 			Map<String, Object> tmpMap = new HashMap<>();
 			tmpMap.put("uri", request.getRequestURI());
-			tmpMap.put("parameters", sparam);
+			tmpMap.put("parameters", parameters);
 			tmpMap.put("headers", headers);
 
 			logMap.put("request", tmpMap);
@@ -166,11 +166,6 @@ public class JobControlEndpoints{
         try {
         	CertAuthInfo certAuth = CertAuthManager.getInstance().getCertAuth(username);
         	remoteTask = new TaskFactory(systemConfiguration).getInstance(task, certAuth, host);
-        	Map<String, String> parameters = new HashMap<>();
-        	for (String key : request.getParameterMap().keySet()) {
-            	String value = request.getParameterMap().get(key)[0]; // Only one value is accepted
-            	parameters.put(key, value);
-        	}
 
         	try {
         		TaskResult<List<Map<String, String>>> result = remoteTask.run(parameters);
@@ -222,7 +217,11 @@ public class JobControlEndpoints{
             response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
             return null;
         } finally {
-			logger.info("AUDIT: {}", gson.toJson(logMap));
+			logger.info("AUDIT: {}", new GsonBuilder()
+					.enableComplexMapKeySerialization()
+					.create()
+					.toJson(logMap)
+			);
 		}
 
     }
