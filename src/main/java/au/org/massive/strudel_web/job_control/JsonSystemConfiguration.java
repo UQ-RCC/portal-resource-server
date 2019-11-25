@@ -96,11 +96,11 @@ public class JsonSystemConfiguration extends AbstractSystemConfiguration {
                 requiredParams.addAll(requiredParamsList);
             }
 
-            String commandPattern;
-            if (task.containsKey("commandPattern")) {
-                commandPattern = (String) task.get("commandPattern");
+            ExecConfig execConfig;
+            if (task.containsKey("execConfig")) {
+                execConfig = (ExecConfig) task.get("execConfig");
             } else {
-                throw new InvalidJsonConfigurationException("JSON configuration for task '" + taskName + "' must define 'commandPattern'");
+                throw new InvalidJsonConfigurationException("JSON configuration for task '" + taskName + "' must define 'execConfig'");
             }
 
             String resultsPattern;
@@ -117,7 +117,7 @@ public class JsonSystemConfiguration extends AbstractSystemConfiguration {
             	httpMethod = task.get("method").toString().toUpperCase();
             TaskParameters taskParameters = new TaskParameters(
                     remoteHost,
-                    commandPattern,
+                    execConfig,
                     resultsPattern,
                     defaults,
                     requiredParams, 

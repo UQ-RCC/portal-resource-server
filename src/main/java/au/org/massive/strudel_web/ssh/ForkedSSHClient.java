@@ -280,7 +280,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
         logMap.put("type", "ssh");
         logMap.put("user", getAuthInfo().getUserName());
         logMap.put("command", cmdLine.getArguments());
-        logMap.put("input", stdin);
+        logMap.put("input", new String(stdin, StandardCharsets.UTF_8));
 
         ByteArrayInputStream input = new ByteArrayInputStream(stdin);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
@@ -291,7 +291,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
         }
         catch (ExecuteException e) {
             logger.error("SSH command failed: "+cmdLine.toString()+"\n"+
-                    "Remote commands: ["+String.join(" ", args)+"]\n"+
+                    "Remote commands: ["+String.join(", ", args)+"]\n"+
                     "Remote server said: " + output.toString());
             throw new SSHExecException(output.toString(), e);
         } finally {

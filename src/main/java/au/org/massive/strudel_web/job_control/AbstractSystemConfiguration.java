@@ -53,14 +53,14 @@ public abstract class AbstractSystemConfiguration implements TaskConfiguration {
 //    }
 
     protected void addRemoteCommand(String jobName, Map<String, String> defaults,
-                                    String[] requiredParams, String commandPattern, 
+                                    String[] requiredParams, ExecConfig execConfig,
                                     String resultPattern) {
-        addRemoteCommand(getLoginHost(), jobName, defaults, requiredParams, 
-        		commandPattern, resultPattern);
+        addRemoteCommand(getLoginHost(), jobName, defaults, requiredParams,
+                execConfig, resultPattern);
     }
 
     protected void addRemoteCommand(String host, String jobName, Map<String, String> defaults,
-                                    String[] requiredParams, String commandPattern, 
+                                    String[] requiredParams, ExecConfig execConfig,
                                     String resultPattern) {
 
         Set<String> requiredParamsSet;
@@ -70,11 +70,11 @@ public abstract class AbstractSystemConfiguration implements TaskConfiguration {
             requiredParamsSet = new HashSet<>(Arrays.asList(requiredParams));
         }
 
-        addRemoteCommand(host, jobName, defaults, requiredParamsSet, commandPattern, resultPattern);
+        addRemoteCommand(host, jobName, defaults, requiredParamsSet, execConfig, resultPattern);
     }
 
     protected void addRemoteCommand(String host, String jobName, Map<String, String> defaults,
-                                    Set<String> requiredParams, String commandPattern, String resultPattern) {
+                                    Set<String> requiredParams, ExecConfig execConfig, String resultPattern) {
 
         if (defaults == null) {
             defaults = new HashMap<>();
@@ -83,7 +83,7 @@ public abstract class AbstractSystemConfiguration implements TaskConfiguration {
             requiredParams = new HashSet<>();
         }
 
-        addRemoteCommand(jobName, new TaskParameters(host, commandPattern, resultPattern, defaults, requiredParams));
+        addRemoteCommand(jobName, new TaskParameters(host, execConfig, resultPattern, defaults, requiredParams));
     }
 
     protected void addRemoteCommand(String jobName, TaskParameters job) {

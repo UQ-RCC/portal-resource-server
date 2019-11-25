@@ -166,7 +166,7 @@ public class StrudelDesktopConfigurationAdapter extends HashMap<String, JsonSyst
      * @return the converted configuration object
      */
     private static Map<String, Object> extractFunctionFromStrudelConfig(String functionName, Map<String, Object> config) {
-        return extractFunctionFromStrudelConfig(functionName, config, new HashMap<String, String>(0));
+        return extractFunctionFromStrudelConfig(functionName, config, new HashMap<>());
     }
 
     /**
@@ -179,10 +179,19 @@ public class StrudelDesktopConfigurationAdapter extends HashMap<String, JsonSyst
      */
     private static Map<String, Object> extractFunctionFromStrudelConfig(String functionName, Map<String, Object> config, Map<String, String> defaults) {
         Map<String, Object> function = new HashMap<>();
-        String cmdPattern = getCommandPattern(functionName, config);
-        function.put("commandPattern", cmdPattern);
+
+        ExecConfig execConfig = getExecConfig(functionName, config);
+        if(execConfig == null) {
+            execConfig = getLegacyCommand(functionName, config);
+        }
+
+        if(execConfig == null) {
+            throw new IllegalArgumentException();
+        }
+
+        function.put("execConfig", execConfig);
         function.put("resultPattern", getResultPattern(functionName, config));
-        function.put("required", getCommandPatternFields(cmdPattern));
+        function.put("required", new ArrayList<>(execConfig.getParameters()));
         function.put("defaults", defaults);
         // Hoang: TODO: put method here: GET/PUT/POST/DELETE
 
@@ -203,15 +212,33 @@ public class StrudelDesktopConfigurationAdapter extends HashMap<String, JsonSyst
      * @param configObject configuration object
      * @return the converted command pattern
      */
-    private static String getCommandPattern(String functionName, Map<String, Object> configObject) {
-        // Remove enclosing quotes
-        @SuppressWarnings("unchecked") String cmdPattern = (String) (((Map<String, Object>) configObject.get(functionName)).get("cmd"));
+    @SuppressWarnings("unchecked")
+    private static ExecConfig getLegacyCommand(String functionName, Map<String, Object> configObject) {
+        Object _cmd = ((Map<String, Object>) configObject.get(functionName)).get("cmd");
+        if(_cmd == null) {
+            return null;
+        }
+
+        String cmdPattern = (String)_cmd;
         cmdPattern = convertCommandPattern(cmdPattern.replaceAll("^\"(.*)\"$", "$1").replaceAll("^'(.*)'$", "$1"));
 
         // Some json config files use 'sessionid' instead of 'jobid'; convert all sessionids to jobids
         cmdPattern = cmdPattern.replaceAll("\\$\\{sessionid\\}", "\\${jobid}");
 
-        return cmdPattern;
+        return new ExecConfig(cmdPattern);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static ExecConfig getExecConfig(String functionName, Map<String, Object> configObject) {
+        Object _exec = (((Map<String, Object>) configObject.get(functionName)).get("exec"));
+        if(_exec == null) {
+            return null;
+        }
+
+        Map<String, Object> exec = (Map<String, Object>)_exec;
+
+        return new ExecConfig((List<String>)exec.get("command"), (List<String>)exec.get("args"));
+
     }
 
     /**
