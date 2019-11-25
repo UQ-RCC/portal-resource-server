@@ -69,16 +69,19 @@ public abstract class AbstractSSHClient implements SSHClient {
     }
 
     @Override
+    public String exec(String[] args, byte[] stdin) throws IOException, SSHExecException, UnsupportedKeyException {
+        try {
+            return exec(args, stdin, null);
+        } catch (SSHExecException e) {
+            logger.error("Error running command ["+String.join(" ", args)+"] on host "+remoteHost + " via "+viaGateway);
+            throw e;
+        }
+    }
+
+    @Override
     public AsyncCommand<String> execAsync(final String remoteCommands) {
         final ExecuteWatchdog watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
-        return new AsyncCommand<>(watchdog, getExecutorService().submit(new Callable<String>() {
-
-            @Override
-            public String call() throws Exception {
-                return exec(remoteCommands, watchdog);
-            }
-
-        }));
+        return new AsyncCommand<>(watchdog, getExecutorService().submit(() -> exec(remoteCommands, watchdog)));
     }
     
 }

@@ -7,6 +7,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -190,6 +191,11 @@ public class ForkedSSHClient extends AbstractSSHClient {
         return exec(remoteCommands, null, watchdog);
     }
 
+    @Override
+    public String exec(String[] args, byte[] stdin, ExecuteWatchdog watchdog) throws IOException, SSHExecException, UnsupportedKeyException {
+        return exec(args, stdin, null, watchdog);
+    }
+
     private static String[] disgustingCustomShellHack() {
 		List<String> args = new ArrayList<>();
 
@@ -220,13 +226,18 @@ public class ForkedSSHClient extends AbstractSSHClient {
      * @throws SSHExecException thrown on errors caused during SSH command execution
      * @throws UnsupportedKeyException 
      */
-    public String exec(String remoteCommands, Map<String, String> extraFlags, ExecuteWatchdog watchdog) 
+    public String exec(String remoteCommands, Map<String, String> extraFlags, ExecuteWatchdog watchdog)
     		throws IOException, SSHExecException, UnsupportedKeyException {
+        return exec(disgustingCustomShellHack(), remoteCommands.getBytes(StandardCharsets.UTF_8), extraFlags, watchdog);
+    }
+
+    public String exec(String[] args, byte[] stdin, Map<String, String> extraFlags, ExecuteWatchdog watchdog)
+            throws IOException, SSHExecException, UnsupportedKeyException {
         CertFiles certFiles = new CertFiles(authInfo);
 
-		String sshConnection = "ssh://" + getAuthInfo().getUserName() + "@" + getViaGateway();
+        String sshConnection = "ssh://" + getAuthInfo().getUserName() + "@" + getViaGateway();
 
-		/* Probably the wrong place for this, but good enough for now. */
+        /* Probably the wrong place for this, but good enough for now. */
         Path socketPath = Paths.get(ResourceServerSettings.getInstance().getTempDir()).resolve(String.format("resource-server-%d", sshConnection.hashCode()));
 
         CommandLine cmdLine = new CommandLine("ssh");
@@ -246,6 +257,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
         cmdLine.addArgument(getViaGateway());
 
         // Add extra flags
+        // TODO: These should be validated as OpenSSH flags only
         if (extraFlags != null && extraFlags.size() > 0) {
             for (String key : extraFlags.keySet()) {
                 String value = extraFlags.get(key);
@@ -255,15 +267,8 @@ public class ForkedSSHClient extends AbstractSSHClient {
                 }
             }
         }
-
-        boolean hasCommands = remoteCommands != null && remoteCommands.length() > 0;
-        if (hasCommands) {
-			cmdLine.addArgument("--");
-			cmdLine.addArguments(disgustingCustomShellHack());
-        } else {
-            remoteCommands = "";
-        }
-
+        cmdLine.addArgument("--");
+        cmdLine.addArguments(args);
 
         Gson gson = new GsonBuilder()
                 .enableComplexMapKeySerialization()
@@ -275,9 +280,9 @@ public class ForkedSSHClient extends AbstractSSHClient {
         logMap.put("type", "ssh");
         logMap.put("user", getAuthInfo().getUserName());
         logMap.put("command", cmdLine.getArguments());
-        logMap.put("input", remoteCommands);
+        logMap.put("input", stdin);
 
-        ByteArrayInputStream input = new ByteArrayInputStream(remoteCommands.getBytes());
+        ByteArrayInputStream input = new ByteArrayInputStream(stdin);
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         Executor exec = getForkedProcessExecutor(watchdog);
         exec.setStreamHandler(new PumpStreamHandler(output, output, input));
@@ -286,8 +291,8 @@ public class ForkedSSHClient extends AbstractSSHClient {
         }
         catch (ExecuteException e) {
             logger.error("SSH command failed: "+cmdLine.toString()+"\n"+
-                         "Remote commands: "+remoteCommands+"\n"+
-                         "Remote server said: " + output.toString());
+                    "Remote commands: ["+String.join(" ", args)+"]\n"+
+                    "Remote server said: " + output.toString());
             throw new SSHExecException(output.toString(), e);
         } finally {
             logMap.put("output", output.toString());
@@ -296,5 +301,4 @@ public class ForkedSSHClient extends AbstractSSHClient {
         }
         return output.toString();
     }
-    
 }
