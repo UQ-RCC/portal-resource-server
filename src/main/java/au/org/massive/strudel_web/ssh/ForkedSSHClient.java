@@ -196,25 +196,6 @@ public class ForkedSSHClient extends AbstractSSHClient {
         return exec(args, stdin, null, watchdog);
     }
 
-    private static String[] disgustingCustomShellHack() {
-		List<String> args = new ArrayList<>();
-
-		for(int i = 0;; ++i) {
-			String arg = System.getProperty(String.format("portal.ssh_shell.%d", i));
-			if(arg == null) {
-				break;
-			}
-
-			args.add(arg);
-		}
-
-		if(args.isEmpty()) {
-			args.add("bash");
-			args.add("-s");
-		}
-		return args.stream().toArray(String[]::new);
-	}
-
     /**
      * Exeucte a remote command
      *
@@ -228,7 +209,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
      */
     public String exec(String remoteCommands, Map<String, String> extraFlags, ExecuteWatchdog watchdog)
     		throws IOException, SSHExecException, UnsupportedKeyException {
-        return exec(disgustingCustomShellHack(), remoteCommands.getBytes(StandardCharsets.UTF_8), extraFlags, watchdog);
+        return exec(new String[]{"bash", "-s"}, remoteCommands.getBytes(StandardCharsets.UTF_8), extraFlags, watchdog);
     }
 
     public String exec(String[] args, byte[] stdin, Map<String, String> extraFlags, ExecuteWatchdog watchdog)
