@@ -9,4 +9,5 @@
 /nimrod.json
 /wiener.json
 /hpcportal.json
-/hpcrs_security.properties
+/*_security.properties
+**/*.pyc
