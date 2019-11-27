@@ -18,7 +18,7 @@ deploy:
     secure: nQCB6Rqmvi1/K79xohIoeJZXoiMiaCm0Hy6yBa/wuTEMThJP6EU+zfFVnmVw3jhE2Z5yzLcazNrIDEzWbmn2i4TtiLxD9dleqPfyiRLi2fzNNUHt3xg3q61ceqoRMXQVPooNwteEwzaNOsuHt7yGMSlYg9vaBy1RELXyWMa9V6NHf73ukR8i6lkQB4pPXHL/pCjdvhwZ7CuN1ULJQ6v2OcPEwNQb13pV9eWMY+anW3ku71neK20cDIzjjDEDuCMluYE+LCDCb5F/ShcYvRolGydDm4JQEjwrh+ldaPmQzhTaVCBNjAswcwjV9m45A9RDJp8dTHk+4lCmdy0r3ifqOcudb+UQjs+vZmWoS3ursUO1oGorzk5rZ87glVgnj18t+bBWeCF7hTXHEyWlRjkCLx5rZqgtZIRHMiZ3SjaWGHdZSKvohAInCtLhVjaA3uFgLjsieU+GBmd9+yHBiG+lTnfR2OxTaMlnipqySuSNbAmEzjnk/WaNzVhh1gdQ97JuvhcPvfy3MeV+ZS/lbtmWLaLqAwDOmC+EKLCaHBtUqGEI7XG9zvyBeiWqTlTyljyYEq1bdiUvGyYTQz8pJus2tq7E95sG1JWhdLAF7JwmqfVtKJlSLlFt8tdzPVnxHKeEx+DBKbIKGZJ+IFtoFjHosnEhzvSXQqRKUzeHyAY5kLw=
   skip_cleanup: true
   file_glob: true
-  file: target/resource-server-*.tar.gz
+  file: build/distributions/resource-server-*.tar.gz
   draft: false
   overwrite: true
   on:
