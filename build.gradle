@@ -28,8 +28,8 @@ repositories {
 
 mainClassName = 'au.org.rcc.ResourceServerApplication'
 
-sourceCompatibility = 1.8
-targetCompatibility = 1.8
+sourceCompatibility = 11
+targetCompatibility = 11
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 dependencies {
@@ -70,6 +70,12 @@ dependencies {
 	implementation group: 'org.glassfish.jaxb', name: 'jaxb-runtime', version: '2.3.1'
 
 	testImplementation 'junit:junit:4.12'
+
+
+	implementation group: 'org.postgresql', name: 'postgresql', version: '42.2.8'
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-jdbc', version: '2.2.1.RELEASE'
+	implementation group: 'org.apache.httpcomponents', name: 'httpclient', version: '+'
+	implementation group: 'com.hubspot.jinjava', name: 'jinjava', version: '2.5.1'
 }
 
 distributions {
