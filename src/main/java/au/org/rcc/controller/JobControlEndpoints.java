@@ -145,6 +145,9 @@ public class JobControlEndpoints{
 			Enumeration<String> hnames = request.getHeaderNames();
 			while(hnames.hasMoreElements()) {
 				String name = hnames.nextElement();
+				if("authorization".equalsIgnoreCase(name)) {
+					continue;
+				}
 				headers.put(name, Collections.list(request.getHeaders(name)));
 			}
 
