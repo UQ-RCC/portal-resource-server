@@ -1,7 +1,4 @@
 package au.org.rcc;
-
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.security.Security;
 
 import org.apache.commons.cli.CommandLine;
@@ -18,8 +15,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
-import org.springframework.context.annotation.Bean;
 
 import au.org.rcc.miscs.ResourceServerSettings;
 import au.org.rcc.miscs.SecuritySettings;
@@ -43,22 +38,10 @@ public class ResourceServerApplication {
     	Option jsonFile = new Option("f", "jsonfile", true, "config json file");
     	jsonFile.setRequired(true);
         options.addOption(jsonFile);
-    	// port
-    	Option serverPort = new Option("p", "port", true, "Server port");
-    	serverPort.setRequired(false);
-        options.addOption(serverPort);
-        // port
-    	Option serverProtocol = new Option("P", "protocol", true, "Server protocol");
-    	serverProtocol.setRequired(false);
-        options.addOption(serverProtocol);
         // remote host
     	Option remoteHost = new Option("h", "remotehost", true, "Remote Host");
     	remoteHost.setRequired(true);
         options.addOption(remoteHost);
-        // binding host
-    	Option bindingHost = new Option("H", "bindinghost", true, "Binding Host");
-    	bindingHost.setRequired(false);
-        options.addOption(bindingHost);
         // security config file
     	Option securityConfig = new Option("s", "securityconf", true, "Security Config");
     	securityConfig.setRequired(true);
@@ -80,10 +63,7 @@ public class ResourceServerApplication {
             return;
         }
         String jsonFileValue = cmd.getOptionValue("jsonfile", "configuration.json");
-        int port = Integer.parseInt(cmd.getOptionValue("port", "9001"));
-        String protocol = cmd.getOptionValue("protocol", "AJP/1.3");
         String remoteHostValue = cmd.getOptionValue("remotehost", "localhost");
-        String bindingHostValue = cmd.getOptionValue("bindinghost", "localhost");
         String securityConfigFile = cmd.getOptionValue("securityconf", "ssh_authz_server.properties");
     	String tempDirStr = cmd.getOptionValue("tempdir", "/tmp/");
     	String rootContext = cmd.getOptionValue("rootcontext", "");
@@ -97,29 +77,12 @@ public class ResourceServerApplication {
 			System.exit(1);
 			return;
 		}
-    	rsSettings.setResourceServerPort(port);
+
     	rsSettings.setRemoteHost(remoteHostValue);
-    	rsSettings.setResourceServerHost(bindingHostValue);
-    	rsSettings.setResourceServerProtocol(protocol);
     	rsSettings.setTempDir(tempDirStr);
     	rsSettings.setRootContext(rootContext);
 
 		Security.addProvider(new BouncyCastleProvider());
         SpringApplication.run(ResourceServerApplication.class, args);
     }
-    
-
-	/**
-	 * Sets the Tomcat server port / protocol according to the configuration file
-	 * @return a configured container factory
-	 */
-	@Bean
-	public TomcatServletWebServerFactory tomcat() throws UnknownHostException {
-		ResourceServerSettings settings = ResourceServerSettings.getInstance();
-
-		TomcatServletWebServerFactory factory = new TomcatServletWebServerFactory(settings.getRootContext(), settings.getResourceServerPort());
-		factory.setAddress(InetAddress.getByName(settings.getResourceServerHost()));
-		factory.setProtocol(settings.getResourceServerProtocol());
-		return factory;
-	}
 }

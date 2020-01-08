@@ -17,9 +17,6 @@ public class ResourceServerSettings {
 	private ConfigurationRegistry CONFIGURATION_REGISTRY;
 	private static ResourceServerSettings instance;
 	private String jsonFile = "";
-	private String resourceServerHost ="";
-	private int resourceServerPort = 8000;
-	private String resourceServerProtocol = "";
 	private String remoteHost = "";
 	private String tempDir = "/tmp/";
 	private String rootContext  = "";
@@ -62,27 +59,7 @@ public class ResourceServerSettings {
             CONFIGURATION_REGISTRY.addSystemConfiguration(configId, c);
         }
 	}
-	
-	public void setResourceServerPort(int p) {
-		resourceServerPort = p;
-	}
-	
-	public String getResourceServerHost() {
-		return resourceServerHost;
-	}
-	
-	public int getResourceServerPort() {
-		return resourceServerPort;
-	}
-	
-	public String getResourceServerProtocol() {
-		return resourceServerProtocol;
-	}
-	
-	public void setResourceServerProtocol(String p) {
-		resourceServerProtocol = p;
-	}
-		
+
 	public ConfigurationRegistry getSystemConfigurations() {
         return CONFIGURATION_REGISTRY;
     }
@@ -91,11 +68,7 @@ public class ResourceServerSettings {
 	public void setRemoteHost(String rHost) {
 		remoteHost = rHost;
 	}
-	
-	public void setResourceServerHost(String host) {
-		resourceServerHost = host;
-	}
-	
+
 	public String getRemoteHost() {
 		return remoteHost;
 	}
