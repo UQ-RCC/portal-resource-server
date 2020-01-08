@@ -8,7 +8,6 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.OpenOption;
 import java.nio.file.Path;
@@ -22,14 +21,11 @@ public class CertFiles implements Closeable {
 	private final Path tempDirectory;
 	private final Path privKeyFile;
 	private final Path certFile;
-	private final Path tempPrivKeyFile;
 
-	public CertFiles(CertAuthInfo authInfo) throws IOException, UnsupportedKeyException {
-		Path defaultPath = FileSystems.getDefault().getPath(ResourceServerSettings.getInstance().getTempDir());
-		tempDirectory = Files.createTempDirectory(defaultPath, "coesra-" + authInfo.getUserName());
+	CertFiles(CertAuthInfo authInfo) throws IOException, UnsupportedKeyException {
+		tempDirectory = Files.createTempDirectory(ResourceServerSettings.getInstance().getTempDir(), "coesra-" + authInfo.getUserName());
 		privKeyFile = tempDirectory.resolve("id_rsa");
 		certFile = tempDirectory.resolve("id_rsa-cert.pub");
-		tempPrivKeyFile = tempDirectory.resolve("id_rsa-cert");
 
 		Set<PosixFilePermission> perms = new HashSet<>();
 		perms.add(PosixFilePermission.OWNER_READ);
@@ -43,10 +39,6 @@ public class CertFiles implements Closeable {
 
 		/* NB: newByteChannel() is the only way to do this atomically. */
 		try(ByteChannel c = Files.newByteChannel(privKeyFile, opts, PosixFilePermissions.asFileAttribute(perms))) {
-			c.write(bb);
-		}
-
-		try(ByteChannel c = Files.newByteChannel(tempPrivKeyFile, opts, PosixFilePermissions.asFileAttribute(perms))) {
 			c.write(bb);
 		}
 
@@ -67,13 +59,6 @@ public class CertFiles implements Closeable {
 		IOException ex = new IOException("Unable to delete certificate files");
 
 		boolean failed = false;
-		try {
-			Files.deleteIfExists(tempPrivKeyFile);
-		} catch(IOException e) {
-			ex.addSuppressed(e);
-			failed = true;
-		}
-
 		try {
 			Files.deleteIfExists(privKeyFile);
 		} catch(IOException e) {

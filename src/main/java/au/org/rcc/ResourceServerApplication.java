@@ -1,4 +1,5 @@
 package au.org.rcc;
+import java.nio.file.Paths;
 import java.security.Security;
 
 import org.apache.commons.cli.CommandLine;
@@ -46,11 +47,7 @@ public class ResourceServerApplication {
     	Option securityConfig = new Option("s", "securityconf", true, "Security Config");
     	securityConfig.setRequired(true);
         options.addOption(securityConfig);
-        // root context
-        Option rootContextConfig = new Option("r", "rootcontext", true, "Root Context");
-        rootContextConfig.setRequired(false);
-        options.addOption(rootContextConfig);
-        
+
         CommandLineParser parser = new DefaultParser();
         HelpFormatter formatter = new HelpFormatter();
         CommandLine cmd;
@@ -65,8 +62,7 @@ public class ResourceServerApplication {
         String jsonFileValue = cmd.getOptionValue("jsonfile", "configuration.json");
         String remoteHostValue = cmd.getOptionValue("remotehost", "localhost");
         String securityConfigFile = cmd.getOptionValue("securityconf", "ssh_authz_server.properties");
-    	String tempDirStr = cmd.getOptionValue("tempdir", "/tmp/");
-    	String rootContext = cmd.getOptionValue("rootcontext", "");
+    	String tempDirStr = cmd.getOptionValue("tempdir", System.getProperty("java.io.tmpdir"));
         ResourceServerSettings rsSettings = ResourceServerSettings.getInstance();
     	SecuritySettings securitySettings = SecuritySettings.getInstance();
     	try {
@@ -79,8 +75,7 @@ public class ResourceServerApplication {
 		}
 
     	rsSettings.setRemoteHost(remoteHostValue);
-    	rsSettings.setTempDir(tempDirStr);
-    	rsSettings.setRootContext(rootContext);
+    	rsSettings.setTempDir(Paths.get(tempDirStr));
 
 		Security.addProvider(new BouncyCastleProvider());
         SpringApplication.run(ResourceServerApplication.class, args);

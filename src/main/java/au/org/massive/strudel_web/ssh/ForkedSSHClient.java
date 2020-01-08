@@ -17,6 +17,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
@@ -146,15 +147,15 @@ public class ForkedSSHClient extends AbstractSSHClient {
 
     public String exec(String[] args, byte[] stdin, Map<String, String> extraFlags, ExecuteWatchdog watchdog)
             throws IOException, SSHExecException, UnsupportedKeyException {
+
         CertFiles certFiles = new CertFiles(authInfo);
 
+        /* Socket path, needs to be reproducible. */
         String sshConnection = "ssh://" + getAuthInfo().getUserName() + "@" + getViaGateway();
-
-        /* Probably the wrong place for this, but good enough for now. */
-        Path socketPath = Paths.get(ResourceServerSettings.getInstance().getTempDir()).resolve(String.format("resource-server-%d", sshConnection.hashCode()));
+        Path socketPath = ResourceServerSettings.getInstance().getTempDir()
+                .resolve(String.format("resource-server-%d", sshConnection.hashCode()));
 
         CommandLine cmdLine = new CommandLine("ssh");
-        //cmdLine.addArgument("-q");
         cmdLine.addArgument("-q");
         cmdLine.addArgument("-i");
         cmdLine.addArgument(certFiles.getPrivKeyFile().toAbsolutePath().toString());

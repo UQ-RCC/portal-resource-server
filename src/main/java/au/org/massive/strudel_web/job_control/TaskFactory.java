@@ -1,27 +1,23 @@
 package au.org.massive.strudel_web.job_control;
 
+import au.org.massive.strudel_web.ssh.CertAuthInfo;
+import au.org.massive.strudel_web.ssh.ForkedSSHClient;
+import au.org.massive.strudel_web.ssh.SSHClient;
+import au.org.massive.strudel_web.ssh.SSHExecException;
+import au.org.massive.strudel_web.util.RegexHelper;
+import au.org.massive.strudel_web.util.UnsupportedKeyException;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.commons.lang3.text.StrSubstitutor;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.apache.commons.lang3.text.StrSubstitutor;
-
-import au.org.massive.strudel_web.util.RegexHelper;
-import au.org.massive.strudel_web.util.UnsupportedKeyException;
-import au.org.massive.strudel_web.ssh.CertAuthInfo;
-import au.org.massive.strudel_web.ssh.ForkedSSHClient;
-import au.org.massive.strudel_web.ssh.SSHClient;
-import au.org.massive.strudel_web.ssh.SSHExecException;
 
 /**
  * Produces {@link Task} objects based on a given {@link TaskConfiguration} and job type.
@@ -36,21 +32,19 @@ public class TaskFactory {
         this.config = config;
     }
 
-    public Task getInstance(String taskType, CertAuthInfo certInfo, String remoteHost) throws IOException, NoSuchTaskTypeException {
+    public Task getInstance(String taskType, CertAuthInfo certInfo, String remoteHost) throws NoSuchTaskTypeException {
         TaskParameters params = config.findByTaskType(taskType);
-        return new Task(taskType, new ForkedSSHClient(certInfo, remoteHost),
+        return new Task(new ForkedSSHClient(certInfo, remoteHost),
                 params.getExecConfig(), params.getResultRegexPattern(), params.getDefaultParams(),
                 params.getRequiredParams());
     }
 
-    public Task getInstance(String taskType, CertAuthInfo certInfo) throws IOException, NoSuchTaskTypeException {
+    public Task getInstance(String taskType, CertAuthInfo certInfo) throws NoSuchTaskTypeException {
         String remoteHost = config.findByTaskType(taskType).getRemoteHost();
         return getInstance(taskType, certInfo, remoteHost);
     }
 
     public class Task {
-
-        private final String taskType;
         private final SSHClient sshClient;
         private final ExecConfig execConfig;
         private final String resultRegexPattern;
@@ -58,22 +52,9 @@ public class TaskFactory {
         private final Set<String> requiredParams;
         private final Gson gson;
         
-        private Task(String taskType, SSHClient sshClient, ExecConfig execConfig,
+        private Task(SSHClient sshClient, ExecConfig execConfig,
         		String resultRegexPattern, Map<String, String> defaultParams, 
         		Set<String> requiredParams) {
-            this.taskType = taskType;
-            this.sshClient = sshClient;
-            this.execConfig = execConfig;
-            this.resultRegexPattern = resultRegexPattern;
-            this.defaultParams = defaultParams;
-            this.requiredParams = requiredParams;
-            this.gson = new GsonBuilder().enableComplexMapKeySerialization().create();
-        }
-        
-        private Task(String taskType, SSHClient sshClient, ExecConfig execConfig,
-        		String resultRegexPattern, Map<String, String> defaultParams, 
-        		Set<String> requiredParams, String method) {
-            this.taskType = taskType;
             this.sshClient = sshClient;
             this.execConfig = execConfig;
             this.resultRegexPattern = resultRegexPattern;

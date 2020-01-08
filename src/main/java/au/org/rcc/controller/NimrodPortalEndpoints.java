@@ -75,8 +75,10 @@ import java.util.Map;
 @ConfigurationProperties(prefix = "nimrod.remote")
 @EnableConfigurationProperties
 public class NimrodPortalEndpoints {
-	private static final ResourceServerSettings SETTINGS = ResourceServerSettings.getInstance();
 	private static final Logger LOGGER = LogManager.getLogger(NimrodPortalEndpoints.class);
+
+	@Autowired
+	private ResourceServerSettings settings;
 
 	private final Jinjava jinJava;
 	private final String nimrodIniTemplate;
@@ -187,7 +189,7 @@ public class NimrodPortalEndpoints {
 		CertAuthInfo certAuth = CertAuthManager.getInstance().getCertAuth(username);
 
 		// FIXME: Add actual upload functionality to the client
-		ForkedSSHClient ssh = new ForkedSSHClient(certAuth, SETTINGS.getRemoteHost());
+		ForkedSSHClient ssh = new ForkedSSHClient(certAuth, settings.getRemoteHost());
 		ssh.exec(new String[]{"sh", "-c", "mkdir -p ~/.config/nimrod && cat > ~/.config/nimrod/nimrod-portal.ini"}, nimrodIni.getBytes(StandardCharsets.UTF_8));
 		ssh.exec(new String[]{"sh", "-c", "mkdir -p ~/.config/nimrod && cat > ~/.config/nimrod/nimrod-portal-setup.ini"}, nimrodSetupIni.getBytes(StandardCharsets.UTF_8));
 

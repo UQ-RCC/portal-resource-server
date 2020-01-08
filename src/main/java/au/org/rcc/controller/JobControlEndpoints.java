@@ -2,19 +2,25 @@
 package au.org.rcc.controller;
 
 
-import au.org.massive.strudel_web.job_control.*;
+import au.org.massive.strudel_web.job_control.AbstractSystemConfiguration;
+import au.org.massive.strudel_web.job_control.ConfigurationRegistry;
+import au.org.massive.strudel_web.job_control.MissingRequiredTaskParametersException;
+import au.org.massive.strudel_web.job_control.NoSuchTaskTypeException;
+import au.org.massive.strudel_web.job_control.TaskFactory;
 import au.org.massive.strudel_web.job_control.TaskFactory.Task;
+import au.org.massive.strudel_web.job_control.TaskResult;
 import au.org.massive.strudel_web.ssh.CertAuthInfo;
 import au.org.massive.strudel_web.ssh.CertAuthManager;
 import au.org.massive.strudel_web.ssh.SSHExecException;
 import au.org.massive.strudel_web.vnc.GuacamoleSession;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
 import au.org.rcc.miscs.ResourceServerSettings;
-
 import com.google.gson.GsonBuilder;
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,17 +28,8 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
-
-import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
@@ -56,11 +53,17 @@ import java.util.Set;
  */
 @Controller
 public class JobControlEndpoints{
-
-    private static final ResourceServerSettings settings = ResourceServerSettings.getInstance();
     private static final Logger logger = LogManager.getLogger(JobControlEndpoints.class);
-    
-    
+
+    @Autowired
+    private ResourceServerSettings settings;
+
+    @Autowired
+	private CertAuthManager certAuthManager;
+
+    @Autowired
+	private GuacamoleSessionManager guacamoleSessionManager;
+
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST}, 
     				value = "/api/execute/{task}")
     @ResponseBody
@@ -105,13 +108,13 @@ public class JobControlEndpoints{
     						 @PathVariable final String task,
     						 @PathVariable final String configuration,
     						 @RequestParam(value="retries", defaultValue="0") Integer retries)throws IOException, SSHExecException, SQLException, NoSuchTaskTypeException {
-        // check auth
-    	OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
-        Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
-        String username = details.get("username").toString();
-        if(username == null) {
-        	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
-            return null;
+		// check auth
+		OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
+		Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
+		String username = details.get("username").toString();
+		if(username == null) {
+			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
+			return null;
         }
 
     	String host = settings.getRemoteHost();
@@ -167,7 +170,7 @@ public class JobControlEndpoints{
 
         Task remoteTask;
         try {
-        	CertAuthInfo certAuth = CertAuthManager.getInstance().getCertAuth(username);
+			CertAuthInfo certAuth = certAuthManager.getCertAuth(username);
         	remoteTask = new TaskFactory(systemConfiguration).getInstance(task, certAuth, host);
 
         	try {
@@ -238,8 +241,8 @@ public class JobControlEndpoints{
      * @param display           the display number assigned to the vnc server
      * @param viaGateway        a gateway through which the tunnel is created (optional, can be inferred if configurationName provided)
      * @param configurationName the name of the configuration used for this tunnel (optional, recommended)
-     * @param request           the {@link HttpServletRequest} object injected from the {@link Context}
-     * @param response          the {@link HttpServletResponse} object injected from the {@link Context}
+     * @param request           the {@link HttpServletRequest} object
+     * @param response          the {@link HttpServletResponse} object
      * @return a vnc session id and desktop name
      * @throws IOException thrown on network IO errors
      * @throws NoSuchProviderException 
@@ -279,7 +282,7 @@ public class JobControlEndpoints{
             viaGateway = systemConfiguration.getLoginHost();
         }
 	logger.info("viagateway=" + viaGateway);
-        GuacamoleSession guacSession = GuacamoleSessionManager.getInstance().startSession(desktopName, vncPassword, viaGateway, remoteHost, remotePort, username);
+        GuacamoleSession guacSession = guacamoleSessionManager.startSession(desktopName, vncPassword, viaGateway, remoteHost, remotePort, username);
 	logger.info("Done creating guacSession");
 
         Map<String, Object> responseData = new HashMap<>();
@@ -293,8 +296,8 @@ public class JobControlEndpoints{
      * Stops a guacamole VNC session
      *
      * @param guacSessionId id of the vnc tunnel session
-     * @param request       the {@link HttpServletRequest} object injected from the {@link Context}
-     * @param response      the {@link HttpServletResponse} object injected from the {@link Context}
+     * @param request       the {@link HttpServletRequest} object
+     * @param response      the {@link HttpServletResponse} object
      * @return a status message
      * @throws IOException thrown on network IO errors
      */
@@ -314,7 +317,7 @@ public class JobControlEndpoints{
             return null;
         }
     	GuacamoleSession guacSession = null;
-        for (GuacamoleSession s : GuacamoleSessionManager.getInstance().getGuacamoleSessionsSet(username)) {
+		for (GuacamoleSession s : guacamoleSessionManager.getGuacamoleSessionsSet(username)) {
             if (s.getId() == guacSessionId) {
                 guacSession = s;
                 break;
@@ -325,7 +328,7 @@ public class JobControlEndpoints{
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No active session found by supplied ID");
             return null;
         } else {
-            GuacamoleSessionManager.getInstance().endSession(guacSession, username);
+			guacamoleSessionManager.endSession(guacSession, username);
             responseData.put("message", "session deleted");
         }
         return responseData;
@@ -334,8 +337,8 @@ public class JobControlEndpoints{
     /**
      * Lists all active VNC sessions for the current user
      *
-     * @param request  the {@link HttpServletRequest} object injected from the {@link Context}
-     * @param response the {@link HttpServletResponse} object injected from the {@link Context}
+     * @param request  the {@link HttpServletRequest} object
+     * @param response the {@link HttpServletResponse} object
      * @return a list of tunnels
      * @throws IOException thrown on network IO errors
      */
@@ -353,7 +356,7 @@ public class JobControlEndpoints{
         	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
             return null;
         }
-    	Set<GuacamoleSession> guacSessions = GuacamoleSessionManager.getInstance().getGuacamoleSessionsSet(username);
+		Set<GuacamoleSession> guacSessions = guacamoleSessionManager.getGuacamoleSessionsSet(username);
         List<Map<String, Object>> tunnels = new ArrayList<>(guacSessions.size());
         for (GuacamoleSession s : guacSessions) {
             Map<String, Object> tunnel = new HashMap<>();

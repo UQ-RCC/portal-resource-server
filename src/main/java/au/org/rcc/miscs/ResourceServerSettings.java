@@ -3,6 +3,8 @@ package au.org.rcc.miscs;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import au.org.massive.strudel_web.job_control.AbstractSystemConfiguration;
 import au.org.massive.strudel_web.job_control.InvalidJsonConfigurationException;
@@ -18,9 +20,8 @@ public class ResourceServerSettings {
 	private static ResourceServerSettings instance;
 	private String jsonFile = "";
 	private String remoteHost = "";
-	private String tempDir = "/tmp/";
-	private String rootContext  = "";
-	
+	private Path tempDir = Paths.get("/tmp/");
+
 	private ResourceServerSettings() {
 		CONFIGURATION_REGISTRY = new ConfigurationRegistry();
 	}
@@ -73,19 +74,11 @@ public class ResourceServerSettings {
 		return remoteHost;
 	}
 	
-	public String getTempDir() {
+	public Path getTempDir() {
 		return this.tempDir;
 	}
-	
-	public void setTempDir(String dir) {
+
+	public void setTempDir(Path dir) {
 		this.tempDir = dir;
-	}
-	
-	public String getRootContext() {
-		return this.rootContext;
-	}
-	
-	public void setRootContext(String rContext) {
-		this.rootContext = rContext;
 	}
 }
