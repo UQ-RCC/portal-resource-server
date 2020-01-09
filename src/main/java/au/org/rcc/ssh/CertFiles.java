@@ -23,7 +23,7 @@ public class CertFiles implements Closeable {
 	private final Path privKeyFile;
 	private final Path certFile;
 
-	CertFiles(CertAuthInfo authInfo, Path tmpDir) throws IOException {
+	public CertFiles(CertAuthInfo authInfo, Path tmpDir) throws IOException {
 		tempDirectory = Files.createTempDirectory(tmpDir, "coesra-" + authInfo.getUserName());
 		privKeyFile = tempDirectory.resolve("id_rsa");
 		certFile = tempDirectory.resolve("id_rsa-cert.pub");
