@@ -11,7 +11,7 @@ import java.nio.file.Path;
 @Component
 public class ResourceServerSettings {
 	@Autowired
-	@Value("${resource-server.remote_host}")
+	@Value("${resource-server.remote-host}")
 	private String remoteHost;
 
 	private Path tmpDir;

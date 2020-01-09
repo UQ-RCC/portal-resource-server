@@ -297,13 +297,13 @@ public class NimrodPortalEndpoints {
 
 	@Bean
 	@Qualifier("pgbuilder")
-	public UriBuilder createPostgresUriBuilder(@Value("${nimrod.remote.postgres_uritemplate}") String s) {
+	public UriBuilder createPostgresUriBuilder(@Value("${nimrod.remote.postgres-uritemplate}") String s) {
 		return new DefaultUriBuilderFactory().uriString(s);
 	}
 
 	@Bean
 	@Qualifier("rabbitbuilder")
-	public UriBuilder createRabbitUriBuilder(@Value("${nimrod.remote.rabbit_uritemplate}") String s) {
+	public UriBuilder createRabbitUriBuilder(@Value("${nimrod.remote.rabbit-uritemplate}") String s) {
 		return new DefaultUriBuilderFactory().uriString(s);
 	}
 

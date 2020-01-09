@@ -48,15 +48,15 @@ public class CertAuthManager {
 	private Duration keyValidity;
 
 	@Autowired
-	@Value("${resource-server.cert.key_algorithm}")
+	@Value("${resource-server.cert.key-algorithm}")
 	private String keyAlgorithm;
 
 	@Autowired
-	@Value("${resource-server.cert.key_bits}")
+	@Value("${resource-server.cert.key-bits}")
 	private int keyBits;
 
 	@Autowired
-	@Value("${resource-server.cert.rng_algorithm}")
+	@Value("${resource-server.cert.rng-algorithm}")
 	private String rngAlgorithm;
 
 	public CertAuthManager() {
@@ -69,7 +69,7 @@ public class CertAuthManager {
 	}
 
 	@Autowired
-	private void setSshCaPrivate(@Value("${resource-server.cert.ca_private}") Path path, @Value("${resource-server.cert.ca_passphrase}") String passphrase) throws IOException {
+	private void setSshCaPrivate(@Value("${resource-server.cert.ca-private}") Path path, @Value("${resource-server.cert.ca-passphrase}") String passphrase) throws IOException {
 		Object pem;
 		try(PEMParser r = new PEMParser(Files.newBufferedReader(path))) {
 			pem = r.readObject();
