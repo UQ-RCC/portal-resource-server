@@ -1,12 +1,12 @@
 package au.org.rcc.controller;
 
-import au.org.rcc.ssh.CertAuthInfo;
-import au.org.rcc.ssh.CertAuthManager;
 import au.org.massive.strudel_web.ssh.ForkedSSHClient;
 import au.org.massive.strudel_web.ssh.SSHExecException;
 import au.org.massive.strudel_web.util.UnsupportedKeyException;
 import au.org.rcc.ResourceServerApplication;
 import au.org.rcc.miscs.ResourceServerSettings;
+import au.org.rcc.ssh.CertAuthInfo;
+import au.org.rcc.ssh.CertAuthManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jinjava.Jinjava;
@@ -32,7 +32,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.HttpComponentsClientHttpRequestFactory;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
-import org.springframework.security.core.Authentication;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -133,19 +133,25 @@ public class NimrodPortalEndpoints {
 
 	private Map<String, String> remoteVars;
 
-	@RequestMapping(method = {RequestMethod.GET, RequestMethod.PUT}, value = "/api2/user/{username}")
+	@RequestMapping(method = {RequestMethod.GET, RequestMethod.PUT}, value = "/api/user/{username}")
 	@ResponseBody
 	public void provisionUser(
 			HttpServletRequest request,
 			HttpServletResponse response,
-			Authentication auth,
+			JwtAuthenticationToken jwtToken,
 			@PathVariable String username
 	) throws IOException, GeneralSecurityException, SSHExecException, UnsupportedKeyException {
+
+		if(!username.equals(jwtToken.getToken().getClaimAsString("preferred_username"))) {
+			response.sendError(HttpStatus.SC_FORBIDDEN);
+			return;
+		}
 
 		SqlRowSet rs = jdbc.queryForRowSet("SELECT pg_password, amqp_password FROM portal_create_user(?)", username);
 		if(!rs.next()) {
 			/* Will never happen. */
 			response.sendError(HttpStatus.SC_SERVICE_UNAVAILABLE);
+			return;
 		}
 
 		String pgPass = rs.getString("pg_password");

@@ -9,18 +9,19 @@ import au.org.massive.strudel_web.job_control.NoSuchTaskTypeException;
 import au.org.massive.strudel_web.job_control.TaskFactory;
 import au.org.massive.strudel_web.job_control.TaskFactory.Task;
 import au.org.massive.strudel_web.job_control.TaskResult;
-import au.org.rcc.ssh.CertAuthInfo;
-import au.org.rcc.ssh.CertAuthManager;
 import au.org.massive.strudel_web.ssh.SSHExecException;
 import au.org.massive.strudel_web.vnc.GuacamoleSession;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
 import au.org.rcc.miscs.ResourceServerSettings;
+import au.org.rcc.ssh.CertAuthInfo;
+import au.org.rcc.ssh.CertAuthManager;
 import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.oauth2.provider.authentication.OAuth2AuthenticationDetails;
+import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,11 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
-import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -68,61 +64,59 @@ public class JobControlEndpoints{
     @Autowired
     private ResourceServerSettings resourceServerSettings;
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST}, 
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST},
     				value = "/api/execute/{task}")
     @ResponseBody
-    public TaskResult<List<Map<String, String>>> executeJob0( 
+    public TaskResult<List<Map<String, String>>> executeJob0(
     						HttpServletRequest request,
     						HttpServletResponse response,
     						Authentication auth,
-    						@PathVariable final String task) throws IOException, SSHExecException, SQLException, NoSuchTaskTypeException {
+							@PathVariable final String task) throws IOException, NoSuchTaskTypeException {
     	return executeJob(request, response, auth, task, null, 0);
     }
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST},
     				value = "/api/execute/{task}/on/{host}")
     @ResponseBody
-    public TaskResult<List<Map<String, String>>> executeJob1( 
+    public TaskResult<List<Map<String, String>>> executeJob1(
 							HttpServletRequest request,
 							HttpServletResponse response,
 							Authentication auth,
-    						@PathVariable final String task) throws IOException, SSHExecException, SQLException, NoSuchTaskTypeException {
+							@PathVariable final String task) throws IOException, NoSuchTaskTypeException {
         return executeJob(request, response, auth, task, null, 0);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST}, 
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST},
     				value = "/api/execute/{task}/in/{configuration}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob2(
 							HttpServletRequest request,
-							HttpServletResponse response,	
+							HttpServletResponse response,
 							Authentication auth,
-				    		@PathVariable final String task, 
-    						@PathVariable final String configuration) throws IOException, SSHExecException, SQLException, NoSuchTaskTypeException {
+							@PathVariable final String task,
+							@PathVariable final String configuration) throws IOException, NoSuchTaskTypeException {
         return executeJob(request, response, auth, task, configuration, 0);
     }
 
-    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST}, 
+    @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST},
     				value = "/api/execute/{task}/in/{configuration}/on/{host}")
     @ResponseBody
     public TaskResult<List<Map<String, String>>> executeJob(
     						 HttpServletRequest request,
     						 HttpServletResponse response,
-    						 Authentication auth,
-    						 @PathVariable final String task,
+							 Authentication auth,
+							 @PathVariable final String task,
     						 @PathVariable final String configuration,
-    						 @RequestParam(value="retries", defaultValue="0") Integer retries)throws IOException, SSHExecException, SQLException, NoSuchTaskTypeException {
-		// check auth
-		OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
-		Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
-		String username = details.get("username").toString();
+							 @RequestParam(value="retries", defaultValue="0") Integer retries)throws IOException, NoSuchTaskTypeException {
+		Jwt jwt = ((JwtAuthenticationToken)auth).getToken();
+		String username = jwt.getClaimAsString("preferred_username");
 		if(username == null) {
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
+			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid username");
 			return null;
-        }
+		}
 
 		String host = resourceServerSettings.getRemoteHost();
-        AbstractSystemConfiguration systemConfiguration = 
+        AbstractSystemConfiguration systemConfiguration =
         		(configuration == null) ? systemConfigurations.getDefaultSystemConfiguration() : systemConfigurations.getSystemConfigurationById(configuration);
         if (systemConfiguration == null) {
             response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid configuration name");
@@ -201,7 +195,7 @@ public class JobControlEndpoints{
             	return null;
         	} catch (SSHExecException e1) {
             	// If this request fails, try using the default remote host
-            	if (retries < 1 && (systemConfiguration.findByTaskType(task).getRemoteHost() !=null) 
+				if (retries < 1 && (systemConfiguration.findByTaskType(task).getRemoteHost() !=null)
             			&& !systemConfiguration.findByTaskType(task).getRemoteHost().isEmpty()) {
              	   return executeJob(request, response, auth, task, configuration, 1);
             	} else {
@@ -248,10 +242,6 @@ public class JobControlEndpoints{
      * @param response          the {@link HttpServletResponse} object
      * @return a vnc session id and desktop name
      * @throws IOException thrown on network IO errors
-     * @throws NoSuchProviderException 
-     * @throws NoSuchAlgorithmException 
-     * @throws SignatureException 
-     * @throws InvalidKeyException 
      */
     @RequestMapping(method = RequestMethod.GET, value = "/api/startvnctunnel")
 	@ResponseBody
@@ -265,17 +255,17 @@ public class JobControlEndpoints{
 			@RequestParam(value="display") int display,
 			@RequestParam(value="via_gateway",required=false) String viaGateway,
 			@RequestParam(value="configuration", defaultValue="") String configurationName) throws IOException, GeneralSecurityException {
-    	OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
-        Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
-        String username = details.get("username").toString();
-        logger.info("@startVncTunnel:" + username);
-        if(username == null) {
-        	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
-            return null;
-        }
+
+		Jwt jwt = ((JwtAuthenticationToken)auth).getToken();
+		String username = jwt.getClaimAsString("preferred_username");
+		if(username == null) {
+			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid username");
+			return null;
+		}
+
     	int remotePort = display + 5900;
         AbstractSystemConfiguration systemConfiguration = systemConfigurations.getDefaultSystemConfiguration();
-        if(configurationName != null && !configurationName.isEmpty())		
+        if(configurationName != null && !configurationName.isEmpty())
 			systemConfiguration = systemConfigurations.getSystemConfigurationById(configurationName);
         if (viaGateway == null && (systemConfiguration == null || !systemConfiguration.isTunnelTerminatedOnLoginHost())) {
             viaGateway = remoteHost;
@@ -310,14 +300,14 @@ public class JobControlEndpoints{
 			HttpServletResponse response,
 			Authentication auth,
 			@RequestParam(value="id") int guacSessionId) throws IOException {
-    	OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
-        Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
-        String username = details.get("username").toString();
-        logger.info("@stopVncTunnel:" + username);
-        if(username == null) {
-        	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
-            return null;
-        }
+
+		Jwt jwt = ((JwtAuthenticationToken)auth).getToken();
+		String username = jwt.getClaimAsString("preferred_username");
+		if(username == null) {
+			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid username");
+			return null;
+		}
+
     	GuacamoleSession guacSession = null;
 		for (GuacamoleSession s : guacamoleSessionManager.getGuacamoleSessionsSet(username)) {
             if (s.getId() == guacSessionId) {
@@ -350,14 +340,16 @@ public class JobControlEndpoints{
     		HttpServletRequest request,
 			HttpServletResponse response,
 			Authentication auth) throws IOException {
-    	OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
-        Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
-        String username = details.get("username").toString();
-        logger.info("@listVncTunnel:" + username);
-        if(username == null) {
-        	response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Invalid username");
-            return null;
-        }
+
+		Jwt jwt = ((JwtAuthenticationToken)auth).getToken();
+		String username = jwt.getClaimAsString("preferred_username");
+		if(username == null) {
+			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid username");
+			return null;
+		}
+
+		logger.info("@listVncTunnel:" + username);
+
 		Set<GuacamoleSession> guacSessions = guacamoleSessionManager.getGuacamoleSessionsSet(username);
         List<Map<String, Object>> tunnels = new ArrayList<>(guacSessions.size());
         for (GuacamoleSession s : guacSessions) {
@@ -370,7 +362,7 @@ public class JobControlEndpoints{
         }
         return tunnels;
     }
-    
+
     @RequestMapping(method = RequestMethod.GET, value = "/api/configurations")
 	@ResponseBody
     public String listConfigurations() {

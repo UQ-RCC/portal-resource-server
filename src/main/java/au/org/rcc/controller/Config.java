@@ -6,7 +6,6 @@ import au.org.massive.strudel_web.job_control.StrudelDesktopConfigurationAdapter
 import au.org.rcc.ssh.CertAuthManager;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
 import au.org.rcc.miscs.ResourceServerSettings;
-import au.org.rcc.miscs.SecuritySettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,11 +33,6 @@ public class Config {
 	@Autowired
 	public JdbcTemplate nimrodJdbcTemplate(@Qualifier("nimrodDataSource") DataSource ds) {
 		return new JdbcTemplate(ds);
-	}
-
-	@Bean
-	public SecuritySettings securitySettings() {
-		return SecuritySettings.getInstance();
 	}
 
 	@Bean

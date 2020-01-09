@@ -1,42 +1,46 @@
 package au.org.rcc.security;
 
-import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.oauth2.config.annotation.web.configuration.EnableResourceServer;
-import org.springframework.security.oauth2.config.annotation.web.configuration.ResourceServerConfigurerAdapter;
-import org.springframework.security.oauth2.config.annotation.web.configurers.ResourceServerSecurityConfigurer;
-import org.springframework.security.oauth2.provider.token.RemoteTokenServices;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
+import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
 
-import au.org.rcc.miscs.SecuritySettings;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Map;
 
 
-@EnableAutoConfiguration
-@EnableGlobalMethodSecurity(prePostEnabled = true)
-@EnableResourceServer
 @Configuration
-public class ResourceServer extends ResourceServerConfigurerAdapter {
+public class ResourceServer extends WebSecurityConfigurerAdapter {
 	@Override
 	public void configure(HttpSecurity http) throws Exception {
-//		http.requestMatchers().antMatchers("/api/**")
-//		.and().authorizeRequests().anyRequest().access("hasAuthority('USER')");
-		http
-		.authorizeRequests()
-		.antMatchers("/api/configurations").permitAll()
-		.anyRequest().access(SecuritySettings.getInstance().getAuthorityCheck());
-//		http.authorizeRequests().anyRequest().permitAll();
+		//http.authorizeRequests().anyRequest().permitAll();
+
+		http.authorizeRequests().antMatchers("/api/configurations").permitAll();
+
+		JwtAuthenticationConverter jc = new JwtAuthenticationConverter();
+		jc.setJwtGrantedAuthoritiesConverter(jwt -> {
+			JwtGrantedAuthoritiesConverter cvt = new JwtGrantedAuthoritiesConverter();
+			ArrayList<GrantedAuthority> authorities = new ArrayList<>(cvt.convert(jwt));
+
+			Map<String, Object> realmAccess = jwt.getClaim("realm_access");
+			Object _roles = realmAccess.get("roles");
+			if(_roles != null) {
+				((Collection<?>)_roles).stream()
+						.map(s -> new SimpleGrantedAuthority(s.toString().toUpperCase()))
+						.forEach(authorities::add);
+			}
+			return authorities;
+		});
+
+		http.authorizeRequests().anyRequest().hasAuthority("USER")
+				.and()
+				.oauth2ResourceServer()
+				.jwt()
+				.jwtAuthenticationConverter(jc);
 	}
-    @Override
-    public void configure(ResourceServerSecurityConfigurer resources) throws Exception {
-        //injecting a custom token converter in order to extract custom properties from id-portens token-info service
-        RemoteTokenServices remoteTokenServices = new RemoteTokenServices();
-        remoteTokenServices.setCheckTokenEndpointUrl(SecuritySettings.getInstance().getTokenInfoUri());
-        remoteTokenServices.setAccessTokenConverter(new CustomAccessTokenConverter());
-        remoteTokenServices.setClientSecret(SecuritySettings.getInstance().getClientSecret());
-        remoteTokenServices.setClientId(SecuritySettings.getInstance().getClientId());
-        resources.resourceId(SecuritySettings.getInstance().getResourceId());
-        resources.tokenServices(remoteTokenServices);
-    }
 }
 
