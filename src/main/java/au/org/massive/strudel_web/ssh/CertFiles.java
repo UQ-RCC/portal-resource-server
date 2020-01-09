@@ -1,10 +1,12 @@
 package au.org.massive.strudel_web.ssh;
 
 import au.org.massive.strudel_web.util.UnsupportedKeyException;
-import au.org.rcc.miscs.ResourceServerSettings;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
 import java.nio.charset.StandardCharsets;
@@ -22,8 +24,8 @@ public class CertFiles implements Closeable {
 	private final Path privKeyFile;
 	private final Path certFile;
 
-	CertFiles(CertAuthInfo authInfo) throws IOException, UnsupportedKeyException {
-		tempDirectory = Files.createTempDirectory(ResourceServerSettings.getInstance().getTempDir(), "coesra-" + authInfo.getUserName());
+	CertFiles(CertAuthInfo authInfo, Path tmpDir) throws IOException, UnsupportedKeyException {
+		tempDirectory = Files.createTempDirectory(tmpDir, "coesra-" + authInfo.getUserName());
 		privKeyFile = tempDirectory.resolve("id_rsa");
 		certFile = tempDirectory.resolve("id_rsa-cert.pub");
 
@@ -35,11 +37,14 @@ public class CertFiles implements Closeable {
 		opts.add(StandardOpenOption.TRUNCATE_EXISTING);
 		opts.add(StandardOpenOption.WRITE);
 
-		ByteBuffer bb = ByteBuffer.wrap(authInfo.getPrivateKey().getBytes(StandardCharsets.UTF_8));
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		try(JcaPEMWriter pemw = new JcaPEMWriter(new OutputStreamWriter(baos))) {
+			pemw.writeObject(authInfo.getKeyPair().getPrivate());
+		}
 
 		/* NB: newByteChannel() is the only way to do this atomically. */
 		try(ByteChannel c = Files.newByteChannel(privKeyFile, opts, PosixFilePermissions.asFileAttribute(perms))) {
-			c.write(bb);
+			c.write(ByteBuffer.wrap(baos.toByteArray()));
 		}
 
 		Files.write(certFile, authInfo.getCertificate().getBytes(StandardCharsets.UTF_8));
@@ -49,7 +54,6 @@ public class CertFiles implements Closeable {
 		return privKeyFile;
 	}
 
-	@SuppressWarnings("unused")
 	public Path getCertFile() {
 		return certFile;
 	}

@@ -1,6 +1,5 @@
 package au.org.rcc;
 
-import au.org.rcc.miscs.ResourceServerSettings;
 import au.org.rcc.miscs.SecuritySettings;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -19,7 +18,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.boot.web.servlet.ServletComponentScan;
 
 import java.io.IOException;
-import java.nio.file.Paths;
 import java.security.Security;
 
 @ServletComponentScan
@@ -29,17 +27,8 @@ import java.security.Security;
 public class ResourceServerApplication {
 	
 	
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) {
     	Options options = new Options();
-    	// json file
-    	Option tempDir = new Option("t", "tempdir", true, "Temporary dir");
-    	tempDir.setRequired(false);
-        options.addOption(tempDir);
-
-        // remote host
-    	Option remoteHost = new Option("h", "remotehost", true, "Remote Host");
-    	remoteHost.setRequired(true);
-        options.addOption(remoteHost);
         // security config file
     	Option securityConfig = new Option("s", "securityconf", true, "Security Config");
     	securityConfig.setRequired(true);
@@ -56,10 +45,7 @@ public class ResourceServerApplication {
             System.exit(1);
             return;
         }
-        String remoteHostValue = cmd.getOptionValue("remotehost", "localhost");
         String securityConfigFile = cmd.getOptionValue("securityconf", "ssh_authz_server.properties");
-    	String tempDirStr = cmd.getOptionValue("tempdir", System.getProperty("java.io.tmpdir"));
-        ResourceServerSettings rsSettings = ResourceServerSettings.getInstance();
     	SecuritySettings securitySettings = SecuritySettings.getInstance();
     	try {
 			securitySettings.readConfig(securityConfigFile);
@@ -68,9 +54,6 @@ public class ResourceServerApplication {
 			System.exit(1);
 			return;
 		}
-
-    	rsSettings.setRemoteHost(remoteHostValue);
-    	rsSettings.setTempDir(Paths.get(tempDirStr));
 
 		Security.addProvider(new BouncyCastleProvider());
         SpringApplication.run(ResourceServerApplication.class, args);

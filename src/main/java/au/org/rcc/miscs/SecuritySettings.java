@@ -12,9 +12,6 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.SystemConfiguration;
 import org.apache.log4j.Logger;
 
-import au.org.massive.oauth2_hpc.ssh.RSAPrivateKeyCodec;
-import au.org.massive.oauth2_hpc.ssh.RSAPublicKeyCodec;
-
 /**
  * Class that provides an abstraction from the configuration files, and sensible defaults if
  * parameters are missing
@@ -48,30 +45,7 @@ public class SecuritySettings {
 		}
 		return instance;
 	}
-	
-	public RSAPublicKey getCAPublicKey() {
-		String caPublicKeyFilePath = config.getString("ssh-ca-public-key");
-		try {
-			return RSAPublicKeyCodec.decodeKeyFromSSHBase64Format(new File(caPublicKeyFilePath));
-		} catch (InvalidKeyException | IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public RSAPrivateKey getCAPrivateKey() {
-		String caPrivateKeyFilePath = config.getString("ssh-ca-private-key");
-		String caPrivateKeyPassphrase = config.getString("ssh-ca-private-key-passphrase");
-		try {
-			return RSAPrivateKeyCodec.decodePEMPrivateKey(new File(caPrivateKeyFilePath), caPrivateKeyPassphrase);
-		} catch (IOException e) {
-			throw new RuntimeException(e);
-		}
-	}
-	
-	public int getMaxSSHCertValidity() {
-		return config.getInt("ssh-cert-max-valid-days", 1);
-	}
-	
+
 	public String getTokenInfoUri() {
 		return config.getString("security.oauth2.resource.token-info-uri");
 	}

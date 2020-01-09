@@ -37,23 +37,18 @@ public class Config {
 	}
 
 	@Bean
-	public ResourceServerSettings resourceServerSettings() {
-		return ResourceServerSettings.getInstance();
-	}
-
-	@Bean
 	public SecuritySettings securitySettings() {
 		return SecuritySettings.getInstance();
 	}
 
 	@Bean
-	public CertAuthManager certAuthManager() {
-		return CertAuthManager.getInstance();
+	public CertAuthManager certAuthManager(ResourceServerSettings settings) {
+		return new CertAuthManager(settings);
 	}
 
 	@Bean
-	public GuacamoleSessionManager guacamoleSessionManager() {
-		return GuacamoleSessionManager.getInstance();
+	public GuacamoleSessionManager guacamoleSessionManager(ResourceServerSettings settings, CertAuthManager certAuthManager) {
+		return new GuacamoleSessionManager(settings.getTmpDir(), certAuthManager);
 	}
 
 	@Bean

@@ -12,6 +12,7 @@ import org.apache.commons.lang3.text.StrSubstitutor;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -27,21 +28,25 @@ import java.util.Set;
 public class TaskFactory {
 
     private final TaskConfiguration config;
+    private final Path tmpDir;
 
-    public TaskFactory(TaskConfiguration config) {
+    public TaskFactory(TaskConfiguration config, Path tmpDir) {
         this.config = config;
+        this.tmpDir = tmpDir;
     }
 
     public Task getInstance(String taskType, CertAuthInfo certInfo, String remoteHost) throws NoSuchTaskTypeException {
         TaskParameters params = config.findByTaskType(taskType);
-        return new Task(new ForkedSSHClient(certInfo, remoteHost),
+        if(remoteHost == null) {
+            remoteHost = params.getRemoteHost();
+        }
+        return new Task(new ForkedSSHClient(certInfo, remoteHost, tmpDir),
                 params.getExecConfig(), params.getResultRegexPattern(), params.getDefaultParams(),
                 params.getRequiredParams());
     }
 
     public Task getInstance(String taskType, CertAuthInfo certInfo) throws NoSuchTaskTypeException {
-        String remoteHost = config.findByTaskType(taskType).getRemoteHost();
-        return getInstance(taskType, certInfo, remoteHost);
+        return this.getInstance(taskType, certInfo, null);
     }
 
     public class Task {

@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
@@ -56,9 +57,6 @@ public class JobControlEndpoints{
     private static final Logger logger = LogManager.getLogger(JobControlEndpoints.class);
 
     @Autowired
-    private ResourceServerSettings settings;
-
-    @Autowired
 	private CertAuthManager certAuthManager;
 
     @Autowired
@@ -66,6 +64,9 @@ public class JobControlEndpoints{
 
     @Autowired
 	private ConfigurationRegistry systemConfigurations;
+
+    @Autowired
+    private ResourceServerSettings resourceServerSettings;
 
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST}, 
     				value = "/api/execute/{task}")
@@ -120,7 +121,7 @@ public class JobControlEndpoints{
 			return null;
         }
 
-    	String host = settings.getRemoteHost();
+		String host = resourceServerSettings.getRemoteHost();
         AbstractSystemConfiguration systemConfiguration = 
         		(configuration == null) ? systemConfigurations.getDefaultSystemConfiguration() : systemConfigurations.getSystemConfigurationById(configuration);
         if (systemConfiguration == null) {
@@ -173,7 +174,7 @@ public class JobControlEndpoints{
         Task remoteTask;
         try {
 			CertAuthInfo certAuth = certAuthManager.getCertAuth(username);
-			remoteTask = new TaskFactory(systemConfiguration, settings.getTempDir()).getInstance(task, certAuth, host);
+			remoteTask = new TaskFactory(systemConfiguration, resourceServerSettings.getTmpDir()).getInstance(task, certAuth, host);
 
         	try {
         		TaskResult<List<Map<String, String>>> result = remoteTask.run(parameters);
@@ -263,7 +264,7 @@ public class JobControlEndpoints{
 			@RequestParam(value="remotehost") String remoteHost,
 			@RequestParam(value="display") int display,
 			@RequestParam(value="via_gateway",required=false) String viaGateway,
-			@RequestParam(value="configuration", defaultValue="") String configurationName) throws IOException, InvalidKeyException, SignatureException, NoSuchAlgorithmException, NoSuchProviderException {
+			@RequestParam(value="configuration", defaultValue="") String configurationName) throws IOException, GeneralSecurityException {
     	OAuth2AuthenticationDetails oauthDetails = (OAuth2AuthenticationDetails) auth.getDetails();
         Map<String, Object> details = (Map<String, Object>) oauthDetails.getDecodedDetails();
         String username = details.get("username").toString();

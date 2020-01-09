@@ -25,6 +25,7 @@ public class ResourceServer extends ResourceServerConfigurerAdapter {
 		.authorizeRequests()
 		.antMatchers("/api/configurations").permitAll()
 		.anyRequest().access(SecuritySettings.getInstance().getAuthorityCheck());
+//		http.authorizeRequests().anyRequest().permitAll();
 	}
     @Override
     public void configure(ResourceServerSecurityConfigurer resources) throws Exception {

@@ -1,7 +1,6 @@
 package au.org.massive.strudel_web.ssh;
 
 import au.org.massive.strudel_web.util.UnsupportedKeyException;
-import au.org.rcc.miscs.ResourceServerSettings;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.exec.CommandLine;
@@ -17,9 +16,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
@@ -36,15 +33,18 @@ public class ForkedSSHClient extends AbstractSSHClient {
 
     private final static Logger logger = LogManager.getLogger(ForkedSSHClient.class);
     private final CertAuthInfo authInfo;
+    private final Path tmpDir;
 
-    public ForkedSSHClient(CertAuthInfo authInfo, String remoteHost) {
+    public ForkedSSHClient(CertAuthInfo authInfo, String remoteHost, Path tmpDir) {
         super(authInfo, remoteHost);
         this.authInfo = authInfo;
+        this.tmpDir = tmpDir;
     }
 
-    public ForkedSSHClient(CertAuthInfo authInfo, String viaGateway, String remoteHost) {
+    public ForkedSSHClient(CertAuthInfo authInfo, String viaGateway, String remoteHost, Path tmpDir) {
         super(authInfo, viaGateway, remoteHost);
         this.authInfo = authInfo;
+        this.tmpDir = tmpDir;
     }
 
     private int findFreePort() throws IOException {
@@ -148,17 +148,17 @@ public class ForkedSSHClient extends AbstractSSHClient {
     public String exec(String[] args, byte[] stdin, Map<String, String> extraFlags, ExecuteWatchdog watchdog)
             throws IOException, SSHExecException, UnsupportedKeyException {
 
-        CertFiles certFiles = new CertFiles(authInfo);
+        CertFiles certFiles = new CertFiles(authInfo, tmpDir);
 
         /* Socket path, needs to be reproducible. */
         String sshConnection = "ssh://" + getAuthInfo().getUserName() + "@" + getViaGateway();
-        Path socketPath = ResourceServerSettings.getInstance().getTempDir()
-                .resolve(String.format("resource-server-%d", sshConnection.hashCode()));
+        Path socketPath = tmpDir.resolve(String.format("sshsock-%d", sshConnection.hashCode()));
 
         CommandLine cmdLine = new CommandLine("ssh");
         cmdLine.addArgument("-q");
         cmdLine.addArgument("-i");
         cmdLine.addArgument(certFiles.getPrivKeyFile().toAbsolutePath().toString());
+        cmdLine.addArgument(String.format("-oCertificateFile=%s", certFiles.getCertFile().toAbsolutePath().toString()));
         cmdLine.addArgument("-oUserKnownHostsFile=/dev/null");
         cmdLine.addArgument("-oStrictHostKeyChecking=no"); // TODO: Remove me when ready
         cmdLine.addArgument("-oBatchMode=yes");

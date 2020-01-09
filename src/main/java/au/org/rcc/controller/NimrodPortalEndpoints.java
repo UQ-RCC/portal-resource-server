@@ -57,6 +57,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
@@ -79,7 +80,10 @@ public class NimrodPortalEndpoints {
 	private static final Logger LOGGER = LogManager.getLogger(NimrodPortalEndpoints.class);
 
 	@Autowired
-	private ResourceServerSettings settings;
+	private ResourceServerSettings resourceServerSettings;
+
+	@Autowired
+	private CertAuthManager certAuthManager;
 
 	private final Jinjava jinJava;
 	private final String nimrodIniTemplate;
@@ -139,7 +143,7 @@ public class NimrodPortalEndpoints {
 			HttpServletResponse response,
 			Authentication auth,
 			@PathVariable String username
-	) throws IOException, NoSuchAlgorithmException, NoSuchProviderException, SignatureException, InvalidKeyException, SSHExecException, UnsupportedKeyException {
+	) throws IOException, GeneralSecurityException, SSHExecException, UnsupportedKeyException {
 
 		SqlRowSet rs = jdbc.queryForRowSet("SELECT pg_password, amqp_password FROM portal_create_user(?)", username);
 		if(!rs.next()) {
@@ -187,10 +191,10 @@ public class NimrodPortalEndpoints {
 		String nimrodIni = jinJava.render(nimrodIniTemplate, vars);
 		String nimrodSetupIni = jinJava.render(setupIniTemplate, vars);
 
-		CertAuthInfo certAuth = CertAuthManager.getInstance().getCertAuth(username);
+		CertAuthInfo certAuth = certAuthManager.getCertAuth(username);
 
 		// FIXME: Add actual upload functionality to the client
-		ForkedSSHClient ssh = new ForkedSSHClient(certAuth, settings.getRemoteHost());
+		ForkedSSHClient ssh = new ForkedSSHClient(certAuth, resourceServerSettings.getRemoteHost(), resourceServerSettings.getTmpDir());
 		ssh.exec(new String[]{"sh", "-c", "mkdir -p ~/.config/nimrod && cat > ~/.config/nimrod/nimrod-portal.ini"}, nimrodIni.getBytes(StandardCharsets.UTF_8));
 		ssh.exec(new String[]{"sh", "-c", "mkdir -p ~/.config/nimrod && cat > ~/.config/nimrod/nimrod-portal-setup.ini"}, nimrodSetupIni.getBytes(StandardCharsets.UTF_8));
 
