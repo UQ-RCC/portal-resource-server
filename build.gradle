@@ -28,8 +28,8 @@ repositories {
 
 mainClassName = 'au.org.rcc.ResourceServerApplication'
 
-sourceCompatibility = 11
-targetCompatibility = 11
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 dependencies {

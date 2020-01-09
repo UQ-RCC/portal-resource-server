@@ -10,6 +10,7 @@ import au.org.rcc.miscs.ResourceServerSettings;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jinjava.Jinjava;
+import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
@@ -88,13 +89,13 @@ public class NimrodPortalEndpoints {
 		this.jinJava = new Jinjava();
 
 		try(InputStream is = ResourceServerApplication.class.getResourceAsStream("nimrod.ini.j2")) {
-			nimrodIniTemplate = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+			nimrodIniTemplate = IOUtils.toString(is, StandardCharsets.UTF_8);
 		} catch(IOException e) {
 			throw new UncheckedIOException(e);
 		}
 
 		try(InputStream is = ResourceServerApplication.class.getResourceAsStream("nimrod-setup.ini.j2")) {
-			setupIniTemplate = new String(is.readAllBytes(), StandardCharsets.UTF_8);
+			setupIniTemplate = IOUtils.toString(is, StandardCharsets.UTF_8);
 		} catch(IOException e) {
 			throw new UncheckedIOException(e);
 		}
