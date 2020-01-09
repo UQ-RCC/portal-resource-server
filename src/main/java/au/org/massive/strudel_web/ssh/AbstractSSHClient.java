@@ -1,9 +1,9 @@
 package au.org.massive.strudel_web.ssh;
 
 import java.io.IOException;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 
+import au.org.rcc.ssh.CertAuthInfo;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.Executor;

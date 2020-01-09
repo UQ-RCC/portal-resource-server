@@ -1,7 +1,7 @@
 package au.org.massive.strudel_web.vnc;
 
-import au.org.massive.strudel_web.ssh.CertAuthInfo;
-import au.org.massive.strudel_web.ssh.CertAuthManager;
+import au.org.rcc.ssh.CertAuthInfo;
+import au.org.rcc.ssh.CertAuthManager;
 import au.org.massive.strudel_web.ssh.ForkedSSHClient;
 import au.org.massive.strudel_web.ssh.Tunnel;
 

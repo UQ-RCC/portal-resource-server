@@ -1,7 +1,7 @@
 package au.org.rcc.controller;
 
-import au.org.massive.strudel_web.ssh.CertAuthInfo;
-import au.org.massive.strudel_web.ssh.CertAuthManager;
+import au.org.rcc.ssh.CertAuthInfo;
+import au.org.rcc.ssh.CertAuthManager;
 import au.org.massive.strudel_web.ssh.ForkedSSHClient;
 import au.org.massive.strudel_web.ssh.SSHExecException;
 import au.org.massive.strudel_web.util.UnsupportedKeyException;
@@ -58,13 +58,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.GeneralSecurityException;
-import java.security.InvalidKeyException;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
-import java.security.SignatureException;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;

@@ -1,6 +1,5 @@
-package au.org.massive.strudel_web.ssh;
+package au.org.rcc.ssh;
 
-import au.org.massive.strudel_web.util.UnsupportedKeyException;
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 
 import java.io.ByteArrayOutputStream;
@@ -24,7 +23,7 @@ public class CertFiles implements Closeable {
 	private final Path privKeyFile;
 	private final Path certFile;
 
-	CertFiles(CertAuthInfo authInfo, Path tmpDir) throws IOException, UnsupportedKeyException {
+	CertFiles(CertAuthInfo authInfo, Path tmpDir) throws IOException {
 		tempDirectory = Files.createTempDirectory(tmpDir, "coesra-" + authInfo.getUserName());
 		privKeyFile = tempDirectory.resolve("id_rsa");
 		certFile = tempDirectory.resolve("id_rsa-cert.pub");

@@ -3,7 +3,7 @@ package au.org.rcc.controller;
 import au.org.massive.strudel_web.job_control.ConfigurationRegistry;
 import au.org.massive.strudel_web.job_control.InvalidJsonConfigurationException;
 import au.org.massive.strudel_web.job_control.StrudelDesktopConfigurationAdapter;
-import au.org.massive.strudel_web.ssh.CertAuthManager;
+import au.org.rcc.ssh.CertAuthManager;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
 import au.org.rcc.miscs.ResourceServerSettings;
 import au.org.rcc.miscs.SecuritySettings;
@@ -39,11 +39,6 @@ public class Config {
 	@Bean
 	public SecuritySettings securitySettings() {
 		return SecuritySettings.getInstance();
-	}
-
-	@Bean
-	public CertAuthManager certAuthManager(ResourceServerSettings settings) {
-		return new CertAuthManager(settings);
 	}
 
 	@Bean

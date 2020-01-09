@@ -1,6 +1,6 @@
 package au.org.massive.strudel_web.job_control;
 
-import au.org.massive.strudel_web.ssh.CertAuthInfo;
+import au.org.rcc.ssh.CertAuthInfo;
 import au.org.massive.strudel_web.ssh.ForkedSSHClient;
 import au.org.massive.strudel_web.ssh.SSHClient;
 import au.org.massive.strudel_web.ssh.SSHExecException;
