@@ -64,6 +64,9 @@ public class JobControlEndpoints{
     @Autowired
 	private GuacamoleSessionManager guacamoleSessionManager;
 
+    @Autowired
+	private ConfigurationRegistry systemConfigurations;
+
     @RequestMapping(method = {RequestMethod.GET, RequestMethod.POST}, 
     				value = "/api/execute/{task}")
     @ResponseBody
@@ -118,7 +121,6 @@ public class JobControlEndpoints{
         }
 
     	String host = settings.getRemoteHost();
-    	ConfigurationRegistry systemConfigurations = settings.getSystemConfigurations();
         AbstractSystemConfiguration systemConfiguration = 
         		(configuration == null) ? systemConfigurations.getDefaultSystemConfiguration() : systemConfigurations.getSystemConfigurationById(configuration);
         if (systemConfiguration == null) {
@@ -171,7 +173,7 @@ public class JobControlEndpoints{
         Task remoteTask;
         try {
 			CertAuthInfo certAuth = certAuthManager.getCertAuth(username);
-        	remoteTask = new TaskFactory(systemConfiguration).getInstance(task, certAuth, host);
+			remoteTask = new TaskFactory(systemConfiguration, settings.getTempDir()).getInstance(task, certAuth, host);
 
         	try {
         		TaskResult<List<Map<String, String>>> result = remoteTask.run(parameters);
@@ -271,10 +273,9 @@ public class JobControlEndpoints{
             return null;
         }
     	int remotePort = display + 5900;
-        AbstractSystemConfiguration systemConfiguration = 
-        	settings.getSystemConfigurations().getDefaultSystemConfiguration();
+        AbstractSystemConfiguration systemConfiguration = systemConfigurations.getDefaultSystemConfiguration();
         if(configurationName != null && !configurationName.isEmpty())		
-        	systemConfiguration = settings.getSystemConfigurations().getSystemConfigurationById(configurationName);
+			systemConfiguration = systemConfigurations.getSystemConfigurationById(configurationName);
         if (viaGateway == null && (systemConfiguration == null || !systemConfiguration.isTunnelTerminatedOnLoginHost())) {
             viaGateway = remoteHost;
             remoteHost = "localhost";
@@ -372,7 +373,7 @@ public class JobControlEndpoints{
     @RequestMapping(method = RequestMethod.GET, value = "/api/configurations")
 	@ResponseBody
     public String listConfigurations() {
-        return settings.getSystemConfigurations().getSystemConfigurationAsJson();
+        return systemConfigurations.getSystemConfigurationAsJson();
     }
 
 }

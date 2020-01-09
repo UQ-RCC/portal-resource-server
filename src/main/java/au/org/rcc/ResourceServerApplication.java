@@ -1,7 +1,7 @@
 package au.org.rcc;
-import java.nio.file.Paths;
-import java.security.Security;
 
+import au.org.rcc.miscs.ResourceServerSettings;
+import au.org.rcc.miscs.SecuritySettings;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
@@ -16,11 +16,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
-
-import au.org.rcc.miscs.ResourceServerSettings;
-import au.org.rcc.miscs.SecuritySettings;
-
 import org.springframework.boot.web.servlet.ServletComponentScan;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+import java.security.Security;
 
 @ServletComponentScan
 @SpringBootApplication
@@ -29,16 +29,13 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 public class ResourceServerApplication {
 	
 	
-    public static void main(String[] args){
+    public static void main(String[] args) throws IOException {
     	Options options = new Options();
     	// json file
     	Option tempDir = new Option("t", "tempdir", true, "Temporary dir");
     	tempDir.setRequired(false);
         options.addOption(tempDir);
-    	// json file
-    	Option jsonFile = new Option("f", "jsonfile", true, "config json file");
-    	jsonFile.setRequired(true);
-        options.addOption(jsonFile);
+
         // remote host
     	Option remoteHost = new Option("h", "remotehost", true, "Remote Host");
     	remoteHost.setRequired(true);
@@ -59,14 +56,12 @@ public class ResourceServerApplication {
             System.exit(1);
             return;
         }
-        String jsonFileValue = cmd.getOptionValue("jsonfile", "configuration.json");
         String remoteHostValue = cmd.getOptionValue("remotehost", "localhost");
         String securityConfigFile = cmd.getOptionValue("securityconf", "ssh_authz_server.properties");
     	String tempDirStr = cmd.getOptionValue("tempdir", System.getProperty("java.io.tmpdir"));
         ResourceServerSettings rsSettings = ResourceServerSettings.getInstance();
     	SecuritySettings securitySettings = SecuritySettings.getInstance();
     	try {
-			rsSettings.setJsonConfigFile(jsonFileValue);
 			securitySettings.readConfig(securityConfigFile);
 		} catch (Exception e) {
 			e.printStackTrace();
