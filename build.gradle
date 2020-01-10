@@ -26,7 +26,7 @@ repositories {
 	mavenCentral()
 }
 
-mainClassName = 'au.org.rcc.ResourceServerApplication'
+mainClassName = 'au.edu.uq.rcc.portal.resource.ResourceServerApplication'
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -65,8 +65,27 @@ dependencies {
 
 distributions {
 	main {
-		baseName 'resource-server'
 		distZip.enabled false
+		contents {
+			eachFile {
+				if (it.relativePath.segments[-2] == 'lib') {
+					it.mode = 0644
+				} else if (it.relativePath.segments[-2] == 'bin') {
+					it.mode = 0755
+				}
+			}
+
+			into("etc/${project.name}") {
+				from('application.sample.yml')
+				rename('application.sample.yml', 'application.yml')
+				fileMode 0644
+			}
+
+			into("etc/${project.name}") {
+				from('logback-spring.xml')
+				fileMode 0644
+			}
+		}
 	}
 }
 
