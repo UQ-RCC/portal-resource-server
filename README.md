@@ -1,5 +1,22 @@
-# Resource Server
+# RCC Portals Resource Server
 
+See `application.sample.yml` for example configuration.
+
+Configure this behind an nginx instance like so:
+```
+location /nimbackend/ {
+    proxy_pass https://resource-server.example.com/nimbackend/;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto https;
+    proxy_set_header X-Real-IP $remote_addr;
+
+    proxy_ssl_verify on;
+    proxy_ssl_trusted_certificate /etc/ssl/nimrod-portal/certs/cacert.pem;
+}
+```
+
+## Usage
 The "resource server" is the service that talks to the HPC. It can mint SSH certificates
 to impersonate any (non-operator) user.
 
@@ -196,3 +213,22 @@ $ curl -sv localhost:8082/nimbackend/api/execute/accessiblelocations | jq .
   ]
 }
 ```
+
+
+## License
+
+This project is licensed under the [Apache License, Version 2.0](https://opensource.org/licenses/Apache-2.0):
+
+Copyright &copy; 2020 [The University of Queensland](http://uq.edu.au/)
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
