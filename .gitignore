@@ -9,5 +9,5 @@
 /nimrod.json
 /wiener.json
 /hpcportal.json
-/*_security.properties
 **/*.pyc
+/src/main/resources/application.yml
