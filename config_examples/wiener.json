@@ -236,11 +236,7 @@
                 },
                 "preprocessing":{
                     "async": true,
-<<<<<<< HEAD
                     "cmd": "mkdir -p {output}; echo {prepinfo} | base64 --decode > {output}/preprocess.json; iconv -f iso8859-1 -t utf-8 {output}/preprocess.json > {output}/tempf; mv {output}/tempf {output}/preprocess.json; echo '#!/bin/bash\n module purge; module load cuda/9.1.85.3;module load cuda91/fiji/150; PREP_OUTPUT=\"{output}\" ImageJ-linux64 --allow-multiple --ij2 --headless --run /clusterdata/uqhngu36/portal-data/scripts/preprocess_from_json.py' | sbatch --mem=10G --partition=gpu --gres=gpu:1 --mail-user=microscopes@imb.uq.edu.au,{usermail} --mail-type=END -N1 -n1 -c4 -L microvol@192.168.0.1 -J preprocess -o {output}/%j.out -e {output}/%j.err",
-=======
-                    "cmd": "mkdir -p {output}; echo {prepinfo} | base64 --decode > {output}/preprocess.json; iconv -f iso8859-1 -t utf-8 {output}/preprocess.json > {output}/tempf; mv {output}/tempf {output}/preprocess.json; echo '#!/bin/bash\n module purge; module load cuda/9.1.85.3;module load cuda91/fiji/150; PREP_OUTPUT=\"{output}\" ImageJ-linux64 --allow-multiple --ij2 --headless --run /clusterdata/uqhngu36/portal-data/scripts/preprocess_from_json.py' | sbatch --mem=10G --partition=gpu --gres=gpu:tesla:1 --mail-user=microscopes@imb.uq.edu.au,{usermail} --mail-type=END -N1 -n1 -c4 -L microvol@192.168.0.1 -J preprocess -o {output}/%j.out -e {output}/%j.err",
->>>>>>> 89664965543f33c9c8320362b6d61a5d16c3c7ff
                     "failFatal": true,
                     "formatFatal": false,
                     "host": "login",
@@ -249,6 +245,18 @@
                         null
                     ],
                     "requireMatch": false                
+                },
+		"deleteTempFiles":{
+                    "async": false,
+                    "cmd": "/usr/bin/python /clusterdata/uqhngu36/portal-data/scripts/clear_scratch.py",
+                    "failFatal": true,
+                    "formatFatal": false,
+                    "host": "login",
+                    "loop": false,
+                    "regex": [
+                        null
+                    ],
+                    "requireMatch": false
                 }
 
             }

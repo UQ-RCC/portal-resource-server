@@ -1,253 +1,311 @@
 [
-    [
-        "Nimrod"
-    ],
-    {
-        "Nimrod": {
-            "loginHost": null,
-            "username": null,
-           	"messageRegexs": [
-                {
-                    "pattern": "^INFO:(?P<info>.*(?:\n|\r\n?))"
-                },
-                {
-                    "pattern": "^WARN:(?P<warn>.*(?:\n|\r\n?))"
-                },
-                {
-                    "pattern": "^ERROR:(?P<error>.*(?:\n|\r\n?))"
-                }
-            ],
-            "Commands": {
-		    "listFolderBase64": {
-                    	"async": true,
-                   	"cmd": "echo {folderpath} | base64 --decode | xargs -d '\n' ls -lh",
-                   	"failFatal": true,
-                    	"formatFatal": false,
-                    	"host": "login",
-                    	"loop": false,
-                    	"regex": [
-                        	"(?P<permission>[^ ]+) +(?P<links>[0-9]+) +(?P<owner>[^ ]+) +(?P<group>[^ ]+) +(?P<size>[^ ]+) +(?P<modm>[^ ]+) +(?P<modd>[0-9]+) +(?P<modh>[^ ]+) +(?P<name>.*)"
-                    	],
-                    	"requireMatch": true
-                    },
-	           "getProjects": {
-	                "async": false,
-	                "cmd": "groups | sed 's@ @\\n@g' | grep -v '^Q[0-9]*R[W|O]$' | grep -v 'qris'",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    "^\\s*(?P<group>\\S+)\\s*$"
-	                ],
-	                "requireMatch": true
-	            },
-		"deleteBase64":{
-                    "async": false,
-                    "cmd": "echo {fileslist} | base64 --decode | tr ';' '\n' | xargs -d '\n' rm -rf",
-                    "failFatal": true,
-                    "formatFatal": false,
-                    "host": "login",
-                    "loop": false,
-                    "regex": [
-                        null
-                    ],
-                    "requireMatch": false
-                },
-                "copyBase64":{
-                    "async": false,
-                    "cmd": "sbatch --mem=10G --mail-user={usermail} --mail-type=END -N1 -n1 -c8 -J portal_copy /clusterdata/uqhngu36/portal-data/scripts/folder_copy.sh {sources} {dest} {parallel}",
-                    "failFatal": true,
-                    "formatFatal": false,
-                    "host": "login",
-                    "loop": false,
-                    "regex": [
-                        null
-                    ],
-                    "requireMatch": false
-                },
-                "moveBase64":{
-                    "async": false,
-                    "cmd": "SRCDIR=\"$(echo {sources} | base64 --decode)\"; DESTDIR=\"$(echo {dest} | base64 --decode)\"; rsync -zr -f'+ */' -f'- *' $SRCDIR/ $DESTDIR/; cd $SRCDIR  &&  find . ! -type d -print0 | xargs -0 -n1 -P{parallel} -I% cp % $DESTDIR/%; rm -rf $SRCDIR",
-                    "failFatal": true,
-                    "formatFatal": false,
-                    "host": "login",
-                    "loop": false,
-                    "regex": [
-                        null
-                    ],
-                    "requireMatch": false
-                },
-                "listCopying":{
-                    "async": false,
-                    "cmd": "squeue -u $(whoami) -o \\\"%j %i %u %T\\\" | tail -n+2 | grep portal_copy || true ",
-                    "failFatal": true,
-                    "formatFatal": false,
-                    "host": "login",
-                    "loop": false,
-                    "regex": [
-                        "(?P<jobname>.*) (?P<jobid>.*) (?P<username>.*) (?P<status>.*)$"
-                    ],
-                    "requireMatch": false
-                },
-	        "getExperiments": {
-	                "async": false,
-	                "cmd": "/bin/nimrod portalapi getexperiments | tail -n +2",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    "(?P<name>.*),(?P<state>.*),(?P<workdir>.*),(?P<creationtime>.*),(?P<token>.*),(?P<path>.*)"
-	               	],
-	                "requireMatch": true
-	        },
-		"readTextfile": {
-                        "async": false,
-                        "cmd": "cat {path}",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-				null
-                        ],
-                        "requireMatch": false
-                },
-		"compilePlanFile": {
-                        "async": false,
-                        "cmd": "echo {pln} | /usr/bin/base64 -d | /bin/nimrod portalapi compile",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-                        	"(?P<line>.*),(?P<position>.*),(?P<message>.*)"
-                        ],
-                        "requireMatch": true
-                },
-	        "addExperiment": {
-	                "async": false,
-	                "cmd": "workdir=$(echo {pln} | base64 -d | /bin/nimrod portalapi addexperiment {expname} | tail -1 | cut -d , -f 3) && (echo {plnbase64} | base64 -d > $workdir/{expname}.pln )",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-			"method": "POST",
-	                "regex": [
-	                    null
-	                ],
-	                "requireMatch": false
-	        },
-	        "deleteExperiment": {
-	                "async": false,
-	                "cmd": "/bin/nimrod portalapi deleteexperiment {expname}",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    null
-	                ],
-	                "requireMatch": false
-	        },
-	        "getResources": {
-	                "async": false,
-	                "cmd": "/bin/nimrod portalapi getresources | tail -n +2",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                     "(?P<name>[a-zA-Z0-9_]+),(?P<type>[a-zA-Z0-9_]+),(?P<jsonconfig>.*),(?P<amqpuri>.*),(?P<amqpcert>.*),(?P<amqpnoverifypeer>.*),(?P<amqpnoverifyhost>.*),(?P<uri>.*),(?P<cert>.*),(?P<noverifypeer>.*),(?P<noverifyhost>.*)"
-	                ],
-	                "requireMatch": true
-	        },
-		"addRCCHPCResource": {
-                        "async": false,
-                        "cmd": "/bin/nimrod resource add {resname} hpc -- --platform x86_64-pc-linux-musl --transport local --walltime={hour}:00:00 --mem={mem}GiB --ncpus={ncpu} --type pbspro --account {account} --limit {limit} --max-batch-size {maxbatch} --uri ssh://localhost -- -q @{machine}",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-                             null
-                        ],
-                        "requireMatch": false
-                },
-	            "deleteResource": {
-	                "async": false,
-	                "cmd": "/bin/nimrod portalapi deleteresource {resname}",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                     null
-	                ],
-	                "requireMatch": false
-	            },
-		    "assignResource": {
-                        "async": false,
-                        "cmd": "nimrod portalapi assign {resname} {expname}",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-                             null
-                        ],
-                        "requireMatch": false
-                    },
-		    "unassignResource": {
-                        "async": false,
-                        "cmd": "nimrod portalapi unassign {resname} {expname}",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-                             null
-                        ],
-                        "requireMatch": false
-                    },
-		    "getAssignments": {
-                        "async": false,
-                        "cmd": "nimrod portalapi getassignments {expname} | tail -n +2",
-                        "failFatal": true,
-                        "formatFatal": false,
-                        "host": "login",
-                        "loop": false,
-                        "regex": [
-                        	"(?P<name>[a-zA-Z0-9_]+),(?P<type>[a-zA-Z0-9_]+),(?P<config_json>.*),(?P<uri>.*),(?P<cert>.*),(?P<noverifypeer>.*),(?P<noverifyhost>.*)"
-                        ],
-                        "requireMatch": true
-                    },
-	            "initNimrod":{
-	                "async": false,
-	                "cmd": "/bin/nimrod setup init",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    null
-	                ],
-	                "requireMatch": false
-	            },
-	            "startExperiment":{
-	                "async": false,
-	                "cmd": "/bin/nimrod master {experiment}",
-	                "failFatal": true,
-	                "formatFatal": false,
-	                "host": "login",
-	                "loop": false,
-	                "regex": [
-	                    null
-	                ],
-	                "requireMatch": false
-	            }
-            }
+  ["Nimrod"],
+  {
+    "Nimrod": {
+      "loginHost": null,
+      "username": null,
+      "messageRegexs": [
+        {
+          "pattern": "^INFO:(?P<info>.*(?:\n|\r\n?))"
+        },
+        {
+          "pattern": "^WARN:(?P<warn>.*(?:\n|\r\n?))"
+        },
+        {
+          "pattern": "^ERROR:(?P<error>.*(?:\n|\r\n?))"
         }
+      ],
+      "Commands": {
+        "listFolderBase64": {
+          "async": true,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/listFolderBase64.py"],
+            "args": ["folderpath"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [
+            "(?P<permission>[^ ]+) +(?P<links>[0-9]+) +(?P<owner>[^ ]+) +(?P<group>[^ ]+) +(?P<size>[^ ]+) +(?P<modm>[^ ]+) +(?P<modd>[0-9]+) +(?P<modh>[^ ]+) +(?P<name>.*)"
+          ],
+          "requireMatch": true
+        },
+        "getProjects": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/nimptool", "getacct"],
+            "args": []
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": ["^\\s*(?P<group>\\S+)\\s*$"],
+          "requireMatch": true
+        },
+        "accessibleLocations": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/nimptool", "getdirs"],
+            "args": []
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": ["^\\s*(?P<path>\\S+)\\s*$"],
+          "requireMatch": true
+        },
+        "checkProcess": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/checkProcess.py"],
+            "args": []
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": ["(?P<pid>[0-9]+),(?P<alive>[01])"],
+          "requireMatch": true
+        },
+        "deleteBase64": {
+          "async": false,
+          "cmd_old": "echo {fileslist} | base64 --decode | tr ';' '\n' | xargs -d '\n' rm -rf",
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/deleteBase64.py"],
+            "args": ["fileslist"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "copyBase64": {
+          "async": false,
+          "cmd_old": "sbatch --mem=10G --mail-user={usermail} --mail-type=END -N1 -n1 -c8 -J portal_copy /clusterdata/uqhngu36/portal-data/scripts/folder_copy.sh {sources} {dest} {parallel}",
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/copyBase64.py"],
+            "args": ["usermail", "sources", "dest", "parallel"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "moveBase64": {
+          "async": false,
+          "cmd": "SRCDIR=\"$(echo {sources} | base64 --decode)\"; DESTDIR=\"$(echo {dest} | base64 --decode)\"; rsync -zr -f'+ */' -f'- *' $SRCDIR/ $DESTDIR/; cd $SRCDIR  &&  find . ! -type d -print0 | xargs -0 -n1 -P{parallel} -I% cp % $DESTDIR/%; rm -rf $SRCDIR",
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "listCopying": {
+          "async": false,
+          "cmd": "squeue -u $(whoami) -o \\\"%j %i %u %T\\\" | tail -n+2 | grep portal_copy || true ",
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [
+            "(?P<jobname>.*) (?P<jobid>.*) (?P<username>.*) (?P<status>.*)$"
+          ],
+          "requireMatch": false
+        },
+        "getExperiments": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/shimrod.py", "portalapi", "getexperiments"],
+            "args": []
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [
+            "(?P<name>.*),(?P<state>.*),(?P<workdir>.*),(?P<creationtime>.*),(?P<token>.*),(?P<path>.*),(?P<total>[0-9]+),(?P<completed>[0-9]+),(?P<running>[0-9]+),(?P<failed>[0-9]+),(?P<pending>[0-9]+)"
+          ],
+          "requireMatch": true
+        },
+        "readTextfile": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/readTextfile.py"],
+            "args": ["path"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "compilePlanFile": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/shimrod.py", "portalapi", "compile"],
+            "args": ["pln"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": ["(?P<line>.*),(?P<position>.*),(?P<message>.*)"],
+          "requireMatch": true
+        },
+        "addExperiment": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/shimrod.py", "portalapi", "addexperiment"],
+            "args": ["pln", "expname"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "method": "POST",
+          "regex": [null],
+          "requireMatch": false
+        },
+        "deleteExperiment": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/shimrod.py", "portalapi", "deleteexperiment"],
+            "args": ["expname"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "getResources": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/shimrod.py", "portalapi", "getresources"],
+            "args": []
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [
+            "(?P<name>[a-zA-Z0-9_]+),(?P<type>[a-zA-Z0-9_]+),(?P<jsonconfig>.*),(?P<amqpuri>.*),(?P<amqpcert>.*),(?P<amqpnoverifypeer>.*),(?P<amqpnoverifyhost>.*),(?P<uri>.*),(?P<cert>.*),(?P<noverifypeer>.*),(?P<noverifyhost>.*)"
+          ],
+          "requireMatch": true
+        },
+        "addRCCHPCResource": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/addRCCHPCResource.py"],
+            "args": [
+              "resname",
+              "hour",
+              "mem",
+              "ncpu",
+              "machine",
+              "account",
+              "limit",
+              "maxbatch"
+            ]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "deleteResource": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/shimrod.py", "portalapi", "deleteresource"],
+            "args": ["resname"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "assignResource": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/shimrod.py", "portalapi", "assign"],
+            "args": ["resname", "expname"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "unassignResource": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/shimrod.py", "portalapi", "unassign"],
+            "args": ["resname", "expname"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "getAssignments": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/shimrod.py", "portalapi", "getassignments"],
+            "args": ["expname"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [
+            "(?P<name>[a-zA-Z0-9_]+),(?P<type>[a-zA-Z0-9_]+),(?P<jsonconfig>.*),(?P<amqpuri>.*),(?P<amqpcert>.*),(?P<amqpnoverifypeer>.*),(?P<amqpnoverifyhost>.*),(?P<uri>.*),(?P<cert>.*),(?P<noverifypeer>.*),(?P<noverifyhost>.*)"
+          ],
+          "requireMatch": true
+        },
+        "startExperiment": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/startExperiment.py"],
+            "args": ["experiment"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        },
+        "setUserConfiguration": {
+          "async": false,
+          "exec": {
+            "command": ["/opt/nimrod-portal/bin/setUserConfiguration.py"],
+            "args": ["config", "setup_config", "initialise"]
+          },
+          "failFatal": true,
+          "formatFatal": false,
+          "host": "login",
+          "loop": false,
+          "regex": [null],
+          "requireMatch": false
+        }
+      }
     }
+  }
 ]
