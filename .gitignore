@@ -11,3 +11,12 @@
 /hpcportal.json
 **/*.pyc
 /src/main/resources/application.yml
+/.citemp
+/debian/*.log
+/debian/*.debhelper
+/debian/changelog
+/debian/files
+/debian/package/
+/debian/portal-resource-server/
+/debian/portal-resource-server.substvars
+/debian/debhelper-build-stamp

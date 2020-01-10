@@ -1,0 +1,35 @@
+#!/usr/bin/make -f
+
+PACKAGE_NAME=portal-resource-server
+PACKAGE_VERSION=${shell git describe --dirty}-0ubuntu1
+PACKAGE_FILE=${PACKAGE_NAME}_${PACKAGE_VERSION}_all.deb
+MAINTAINER_NAME=Research Computing Centre
+MAINTAINER_EMAIL=rcc-admin@uq.edu.au
+
+
+DEBIAN_FILES=$(addprefix debian/,compat control debian-binary ${PACKAGE_NAME}.postinst ${PACKAGE_NAME}.postrm ${PACKAGE_NAME}.service rules)
+
+all: ${PACKAGE_FILE}
+
+# Debian changelogs use RFC2822, not ISO8601
+# date +"%a, %d %b %Y %H:%M:%S %z"
+# git show -s --format=%cD HEAD
+debian/changelog: .git/HEAD
+	printf "${PACKAGE_NAME} (${PACKAGE_VERSION}) bionic; urgency=medium\n" > $@
+	printf "\n" >> $@
+	printf "  * dummy\n" >> $@
+	printf "\n" >> $@
+	printf " -- ${MAINTAINER_NAME} <${MAINTAINER_EMAIL}>  $(shell git show -s --format=%cD HEAD)\n" >> $@
+
+
+${PACKAGE_FILE}: ${DEBIAN_FILES} debian/changelog
+	debian/rules build
+	fakeroot debian/rules binary
+
+clean: debian/rules
+	debian/rules clean
+	rm -f debian/changelog ${PACKAGE_FILE}
+
+# dpkg-buildpackage --no-sign -b
+
+.PHONY: clean all

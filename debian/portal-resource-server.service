@@ -1,0 +1,19 @@
+[Unit]
+Description=RCC Portal Resource Server
+After=network.target
+
+[Service]
+Type=simple
+User=portal-resource-server
+Group=portal-resource-server
+RuntimeDirectory=portal-resource-server
+RuntimeDirectoryMode=770
+PrivateTmp=true
+WorkingDirectory=/var/lib/portal-resource-server
+ExecStart=/usr/share/portal-resource-server/bin/portal-resource-server \
+    --spring.config.location=/etc/portal-resource-server/application.yml \
+    --logging.config=/etc/portal-resource-server/logback-spring.xml
+SuccessExitStatus=143
+
+[Install]
+WantedBy=multi-user.target

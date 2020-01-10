@@ -87,9 +87,34 @@ distributions {
 			}
 		}
 	}
+
+	deb {
+		debDistZip.enabled false
+		debDistTar.enabled false
+		contents {
+			with distributions.main.contents {
+				into "usr/share/${project.name}"
+			}
+
+			into("etc/${project.name}") {
+				from('application.sample.yml')
+				rename('application.sample.yml', 'application.yml')
+				fileMode 0644
+			}
+
+			into("etc/${project.name}") {
+				from('logback-spring.xml')
+				fileMode 0644
+			}
+		}
+	}
 }
 
 distTar {
 	compression Compression.GZIP
 	extension 'tar.gz' /* Not .tgz */
+}
+
+installDebDist {
+	destinationDir = new File("debian/${project.name}")
 }

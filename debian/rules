@@ -1,0 +1,32 @@
+#!/usr/bin/make -f
+export DH_VERBOSE = 1
+export TERM=dumb
+
+GRADLE=./gradlew --quiet -g .citemp --no-daemon
+
+override_dh_installchangelogs:
+
+override_dh_installinit:
+
+override_dh_installdocs:
+
+override_dh_installsystemd:
+	dh_installsystemd --no-start --restart-after-upgrade --no-enable
+
+override_dh_auto_test:
+
+override_dh_auto_build:
+	${GRADLE} build
+
+override_dh_auto_install:
+	${GRADLE} installDebDist
+
+override_dh_auto_clean:
+	${GRADLE} clean
+
+override_dh_builddeb:
+	dpkg-deb --build debian/portal-resource-server .
+
+%:
+	dh $@
+

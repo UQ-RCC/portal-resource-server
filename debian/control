@@ -1,0 +1,14 @@
+Source: portal-resource-server
+Section: java
+Priority: optional
+Maintainer: Research Computing Centre <rcc-admin@uq.edu.au>
+Build-Depends: debhelper (>= 11)
+Vcs-Git: https://github.com/UQ-RCC/portal-resource-server.git
+Vcs-Browser: https://github.com/UQ-RCC/portal-resource-server
+
+Package: portal-resource-server
+Architecture: all
+Depends: default-jre-headless (>= 1.8), adduser
+Description: RCC Portal Resource Server
+ Handles SSH communication with HPC
+Homepage: https://rcc.uq.edu.au/nimrod

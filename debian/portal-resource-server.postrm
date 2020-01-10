@@ -1,0 +1,19 @@
+#!/bin/sh
+
+set -e
+
+if [ "${1}" = "purge" ] ; then
+	if [ -d /var/lib/portal-resource-server ]; then
+		rm -rf /var/lib/portal-resource-server
+	fi
+	if [ -d /var/log/portal-resource-server ]; then
+		rm -rf /var/log/portal-resource-server
+	fi
+	if [ -d /etc/portal-resource-server ]; then
+		rm -rf /etc/portal-resource-server
+	fi
+fi
+
+#DEBHELPER#
+
+exit 0
