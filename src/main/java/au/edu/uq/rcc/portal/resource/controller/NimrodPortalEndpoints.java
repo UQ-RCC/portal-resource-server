@@ -117,9 +117,6 @@ public class NimrodPortalEndpoints {
 	@Value("${nimrod.rabbitmq.user}")
 	private String rabbitUser;
 
-	@Value("${nimrod.rabbitmq.cacert")
-	private Path rabbitCacert;
-
 	@Value("${nimrod.rabbitmq.password}")
 	private String rabbitPassword;
 
