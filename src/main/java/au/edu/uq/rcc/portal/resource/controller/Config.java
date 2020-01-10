@@ -1,11 +1,11 @@
 package au.edu.uq.rcc.portal.resource.controller;
 
+import au.edu.uq.rcc.portal.resource.miscs.ResourceServerSettings;
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthManager;
 import au.org.massive.strudel_web.job_control.ConfigurationRegistry;
 import au.org.massive.strudel_web.job_control.InvalidJsonConfigurationException;
 import au.org.massive.strudel_web.job_control.StrudelDesktopConfigurationAdapter;
-import au.edu.uq.rcc.portal.resource.ssh.CertAuthManager;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
-import au.edu.uq.rcc.portal.resource.miscs.ResourceServerSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,6 +14,7 @@ import org.springframework.boot.jdbc.DataSourceBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import javax.sql.DataSource;
 import java.io.IOException;
@@ -36,8 +37,8 @@ public class Config {
 	}
 
 	@Bean
-	public GuacamoleSessionManager guacamoleSessionManager(ResourceServerSettings settings, CertAuthManager certAuthManager) {
-		return new GuacamoleSessionManager(settings.getTmpDir(), certAuthManager);
+	public GuacamoleSessionManager guacamoleSessionManager(ResourceServerSettings settings, CertAuthManager certAuthManager, ThreadPoolTaskExecutor taskExecutor) {
+		return new GuacamoleSessionManager(settings.getTmpDir(), certAuthManager, taskExecutor.getThreadPoolExecutor());
 	}
 
 	@Bean

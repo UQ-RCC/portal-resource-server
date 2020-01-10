@@ -1,23 +1,17 @@
 package au.org.massive.strudel_web.ssh;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-
 import au.edu.uq.rcc.portal.resource.ssh.CertAuthInfo;
+import au.org.massive.strudel_web.util.UnsupportedKeyException;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.Executor;
-
-import au.edu.uq.rcc.portal.resource.controller.AsyncTasks;
-import au.org.massive.strudel_web.util.UnsupportedKeyException;
-
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+
 /**
  * An abstract SSH client that provides command execution and async command execution methods
- *
- * @author jrigby
  */
 public abstract class AbstractSSHClient implements SSHClient {
 
@@ -44,10 +38,6 @@ public abstract class AbstractSSHClient implements SSHClient {
         return exec;
     }
 
-    protected ExecutorService getExecutorService() {
-        return AsyncTasks.getExecutorService();
-    }
-
     protected CertAuthInfo getAuthInfo() {
         return authInfo;
     }
@@ -59,7 +49,7 @@ public abstract class AbstractSSHClient implements SSHClient {
     }
 
     @Override
-    public String exec(String remoteCommands) throws IOException, SSHExecException, UnsupportedKeyException {
+    public String exec(String remoteCommands) throws IOException, UnsupportedKeyException {
         try {
             return exec(remoteCommands, null);
         } catch (SSHExecException e) {
@@ -69,7 +59,7 @@ public abstract class AbstractSSHClient implements SSHClient {
     }
 
     @Override
-    public String exec(String[] args, byte[] stdin) throws IOException, SSHExecException, UnsupportedKeyException {
+    public String exec(String[] args, byte[] stdin) throws IOException, UnsupportedKeyException {
         try {
             return exec(args, stdin, null);
         } catch (SSHExecException e) {
@@ -77,11 +67,4 @@ public abstract class AbstractSSHClient implements SSHClient {
             throw e;
         }
     }
-
-    @Override
-    public AsyncCommand<String> execAsync(final String remoteCommands) {
-        final ExecuteWatchdog watchdog = new ExecuteWatchdog(ExecuteWatchdog.INFINITE_TIMEOUT);
-        return new AsyncCommand<>(watchdog, getExecutorService().submit(() -> exec(remoteCommands, watchdog)));
-    }
-    
 }

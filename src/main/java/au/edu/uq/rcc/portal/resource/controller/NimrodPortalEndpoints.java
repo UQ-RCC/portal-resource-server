@@ -137,7 +137,7 @@ public class NimrodPortalEndpoints {
 			HttpServletResponse response,
 			JwtAuthenticationToken jwtToken,
 			@PathVariable String username
-	) throws IOException, GeneralSecurityException, SSHExecException, UnsupportedKeyException {
+	) throws IOException, GeneralSecurityException, UnsupportedKeyException {
 
 		if(!username.equals(jwtToken.getToken().getClaimAsString("preferred_username"))) {
 			response.sendError(HttpStatus.SC_FORBIDDEN);

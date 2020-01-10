@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Manages the lifecycle of a Guacamole session
@@ -21,13 +22,15 @@ import java.util.Set;
 public class GuacamoleSessionManager {
 	private final Path tmpDir;
 	private final CertAuthManager certAuthManager;
+	private final ExecutorService executorService;
 	private final Map<Integer, Tunnel> sshTunnels;
 	private final Map<String, Set<GuacamoleSession>> guacamoleSessions;
 
 
-	public GuacamoleSessionManager(Path tmpDir, CertAuthManager certAuthManager) {
+	public GuacamoleSessionManager(Path tmpDir, CertAuthManager certAuthManager, ExecutorService executorService) {
 		this.tmpDir = tmpDir;
 		this.certAuthManager = certAuthManager;
+		this.executorService = executorService;
 		this.sshTunnels = new HashMap<>();
 		this.guacamoleSessions = new HashMap<>();
 	}
@@ -92,7 +95,7 @@ public class GuacamoleSessionManager {
 			throws IOException, GeneralSecurityException {
 		CertAuthInfo certAuth = certAuthManager.getCertAuth(username);
 		ForkedSSHClient sshClient = new ForkedSSHClient(certAuth, viaGateway, remoteHost, tmpDir);
-		Tunnel t = sshClient.startTunnel(remotePort, 0);
+		Tunnel t = sshClient.startTunnel(remotePort, 0, executorService);
 		sshTunnels.put(t.getLocalPort(), t);
 		return t.getLocalPort();
 	}

@@ -3,7 +3,6 @@ package au.org.massive.strudel_web.job_control;
 import au.edu.uq.rcc.portal.resource.ssh.CertAuthInfo;
 import au.org.massive.strudel_web.ssh.ForkedSSHClient;
 import au.org.massive.strudel_web.ssh.SSHClient;
-import au.org.massive.strudel_web.ssh.SSHExecException;
 import au.org.massive.strudel_web.util.RegexHelper;
 import au.org.massive.strudel_web.util.UnsupportedKeyException;
 import com.google.gson.Gson;
@@ -68,7 +67,7 @@ public class TaskFactory {
             this.gson = new GsonBuilder().enableComplexMapKeySerialization().create();
         }
 
-        public TaskResult<List<Map<String, String>>> run(Map<String, String> parameters) throws IOException, SSHExecException, MissingRequiredTaskParametersException, UnsupportedKeyException {
+        public TaskResult<List<Map<String, String>>> run(Map<String, String> parameters) throws IOException, MissingRequiredTaskParametersException, UnsupportedKeyException {
             validateParameters(parameters, defaultParams, requiredParams);
 
             byte[] input;

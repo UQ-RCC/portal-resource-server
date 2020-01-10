@@ -1,6 +1,5 @@
 package au.org.massive.strudel_web.ssh;
 
-import au.org.massive.strudel_web.util.UnsupportedKeyException;
 import au.edu.uq.rcc.portal.resource.ssh.CertAuthInfo;
 import au.edu.uq.rcc.portal.resource.ssh.CertFiles;
 import com.google.gson.Gson;
@@ -22,7 +21,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
 
 /**
  * A non-native SSH client implmentation that forks SSH processes for each request.
@@ -31,6 +30,7 @@ import java.util.concurrent.Callable;
  *
  * @author jrigby
  */
+@SuppressWarnings("WeakerAccess")
 public class ForkedSSHClient extends AbstractSSHClient {
 
     private final static Logger logger = LogManager.getLogger(ForkedSSHClient.class);
@@ -61,10 +61,11 @@ public class ForkedSSHClient extends AbstractSSHClient {
      *
      * @param remotePort the port to forward
      * @param maxUptimeInSeconds the maximum length of time for the tunnel to remain open. Zero represents infinity.
+     * @param executorService the executor service to use
      * @return a {@link Tunnel} object
      * @throws IOException thrown on errors reading data streams
      */
-    public Tunnel startTunnel(final int remotePort, int maxUptimeInSeconds) throws IOException {
+    public Tunnel startTunnel(final int remotePort, int maxUptimeInSeconds, ExecutorService executorService) throws IOException {
         final int localPort = findFreePort();
         final ExecuteWatchdog watchdog;
         if (maxUptimeInSeconds < 1) {
@@ -72,15 +73,10 @@ public class ForkedSSHClient extends AbstractSSHClient {
         } else {
             watchdog = new ExecuteWatchdog((long) maxUptimeInSeconds * 1000);
         }
-        getExecutorService().submit(new Callable<String>() {
-
-            @Override
-            public String call() throws Exception {
-                Map<String, String> tunnelFlags = new HashMap<>();
-                tunnelFlags.put("-L" + localPort + ":"+getRemoteHost()+":" + remotePort, "");
-                return exec("sleep infinity", tunnelFlags, watchdog);
-            }
-
+        executorService.submit(() -> {
+            Map<String, String> tunnelFlags = new HashMap<>();
+            tunnelFlags.put("-L" + localPort + ":"+getRemoteHost()+":" + remotePort, "");
+            return exec("sleep infinity", tunnelFlags, watchdog);
         });
 
         return new Tunnel() {
@@ -119,15 +115,14 @@ public class ForkedSSHClient extends AbstractSSHClient {
      * @param remoteCommands commands to execute
      * @param watchdog       can be used to kill runaway processes
      * @return the command results
-     * @throws UnsupportedKeyException 
      */
     @Override
-    public String exec(String remoteCommands, ExecuteWatchdog watchdog) throws IOException, SSHExecException, UnsupportedKeyException {
+    public String exec(String remoteCommands, ExecuteWatchdog watchdog) throws IOException {
         return exec(remoteCommands, null, watchdog);
     }
 
     @Override
-    public String exec(String[] args, byte[] stdin, ExecuteWatchdog watchdog) throws IOException, SSHExecException, UnsupportedKeyException {
+    public String exec(String[] args, byte[] stdin, ExecuteWatchdog watchdog) throws IOException {
         return exec(args, stdin, null, watchdog);
     }
 
@@ -139,16 +134,12 @@ public class ForkedSSHClient extends AbstractSSHClient {
      * @param watchdog can be used to kill runaway processes
      * @return the command results
      * @throws IOException thrown on errors reading data streams
-     * @throws SSHExecException thrown on errors caused during SSH command execution
-     * @throws UnsupportedKeyException 
      */
-    public String exec(String remoteCommands, Map<String, String> extraFlags, ExecuteWatchdog watchdog)
-    		throws IOException, SSHExecException, UnsupportedKeyException {
+    public String exec(String remoteCommands, Map<String, String> extraFlags, ExecuteWatchdog watchdog) throws IOException {
         return exec(new String[]{"bash", "-s"}, remoteCommands.getBytes(StandardCharsets.UTF_8), extraFlags, watchdog);
     }
 
-    public String exec(String[] args, byte[] stdin, Map<String, String> extraFlags, ExecuteWatchdog watchdog)
-            throws IOException, SSHExecException, UnsupportedKeyException {
+    public String exec(String[] args, byte[] stdin, Map<String, String> extraFlags, ExecuteWatchdog watchdog) throws IOException {
 
         CertFiles certFiles = new CertFiles(authInfo, tmpDir);
 
