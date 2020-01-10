@@ -1,0 +1,84 @@
+[
+	[
+		"Nimrod"
+	],
+	{
+		"Nimrod": {
+			"loginHost": null,
+			"username": null,
+			"messageRegexs": [
+				{
+					"pattern": "^INFO:(?P<info>.*(?:\n|\r\n?))"
+				},
+				{
+					"pattern": "^WARN:(?P<warn>.*(?:\n|\r\n?))"
+				},
+				{
+					"pattern": "^ERROR:(?P<error>.*(?:\n|\r\n?))"
+				}
+			],
+			"Commands": {
+				"listFolderBase64": {
+					"async": true,
+					"cmd": "echo {folderpath} | base64 --decode | xargs -d '\n' ls --time-style=long-iso -lh",
+					"failFatal": true,
+					"formatFatal": false,
+					"host": "login",
+					"loop": false,
+					"regex": [
+						"(?P<permission>[^ ]+) +(?P<links>[0-9]+) +(?P<owner>[^ ]+) +(?P<group>[^ ]+) +(?P<size>[^ ]+) +(?P<modd>[^ ]+) +(?P<modh>[^ ]+) +(?P<name>.*)"
+					],
+					"requireMatch": true
+				},
+				"getProjects": {
+					"async": false,
+					"cmd": "/opt/nimrod-portal/bin/nimptool getacct",
+					"failFatal": true,
+					"formatFatal": false,
+					"host": "login",
+					"loop": false,
+					"regex": [
+						"^\\s*(?P<group>\\S+)\\s*$"
+					],
+					"requireMatch": true
+				},
+				"accessibleLocations": {
+					"async": false,
+					"cmd": "/opt/nimrod-portal/bin/nimptool getdirs",
+					"failFatal": true,
+					"formatFatal": false,
+					"host": "login",
+					"loop": false,
+					"regex": [
+						"^\\s*(?P<path>\\S+)\\s*$"
+					],
+					"requireMatch": true
+				},
+				"listAll": {
+					"async": false,
+					"cmd": "\"/opt/pbs/bin/qstat -aw @flashmgr2 @awonmgr2 @tinmgr2.ib0 | grep '^[0-9].*$' |sed -e's/  */;/g'|sed -e 's/;$//g'\"",
+					"failFatal": true,
+					"formatFatal": false,
+					"host": "login",
+					"loop": false,
+					"regex": [
+						"^(?P<jobid>(?P<jobidNumber>[0-9]+).*);(?P<username>.*);(?P<queue>.*);(?P<jobname>.*);(?P<sessionid>.*);(?P<nds>.*);(?P<tsk>.*);(?P<reqmem>.*);(?P<reqtime>.*);(?P<state>.*);(?P<elapTime>.*)$"
+					],
+					"requireMatch": true
+				},
+				"submitJob": {
+					"async": false,
+					"cmd": "mkdir -p {workdir} && cd {workdir} && echo {pbs} | base64 -d > {jobName}.pbs && qsub -q {machine} {jobName}.pbs",
+					"failFatal": true,
+					"formatFatal": false,
+					"host": "login",
+					"loop": false,
+					"regex": [
+						null
+					],
+					"requireMatch": false
+				}
+			}
+		}
+	}
+]
