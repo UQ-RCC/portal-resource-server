@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <configuration>
 
-    <property name="LOGS" value="./logs" />
+    <property name="LOGS" value="/var/log/portal-resource-server" />
 
     <appender name="Console"
-        class="ch.qos.logback.core.ConsoleAppender">
+              class="ch.qos.logback.core.ConsoleAppender">
         <layout class="ch.qos.logback.classic.PatternLayout">
             <Pattern>
                 %black(%d{ISO8601}) %highlight(%-5level) [%blue(%t)] %yellow(%C{1.}): %msg%n%throwable
@@ -13,25 +13,25 @@
     </appender>
 
     <appender name="RollingFile"
-        class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${LOGS}/resource-server.log</file>
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOGS}/portal-resource-server.log</file>
         <encoder
-            class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+                class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
             <Pattern>%d %p %C{1.} [%t] %m%n</Pattern>
         </encoder>
 
         <rollingPolicy
-            class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+                class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <!-- rollover daily and when the file reaches 10 MegaBytes -->
-            <fileNamePattern>${LOGS}/archived/resource-server-%d{yyyy-MM-dd}.%i.log
+            <fileNamePattern>${LOGS}/portal-resource-server-%d{yyyy-MM-dd}.%i.log
             </fileNamePattern>
             <timeBasedFileNamingAndTriggeringPolicy
-                class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
                 <maxFileSize>10MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
-    
+
     <!-- LOG everything at INFO level -->
     <root level="info">
         <appender-ref ref="RollingFile" />
