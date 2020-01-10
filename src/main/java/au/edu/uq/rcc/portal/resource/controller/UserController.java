@@ -1,4 +1,4 @@
-package au.org.rcc.controller;
+package au.edu.uq.rcc.portal.resource.controller;
 
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Controller;

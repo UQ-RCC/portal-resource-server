@@ -1,4 +1,4 @@
-package au.org.rcc.security;
+package au.edu.uq.rcc.portal.resource.security;
 
 import java.io.IOException;
 

@@ -1,4 +1,4 @@
-package au.org.rcc.ssh;
+package au.edu.uq.rcc.portal.resource.ssh;
 
 import java.security.KeyPair;
 import java.time.Instant;

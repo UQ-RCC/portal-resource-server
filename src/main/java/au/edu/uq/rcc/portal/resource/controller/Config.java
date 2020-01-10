@@ -1,11 +1,11 @@
-package au.org.rcc.controller;
+package au.edu.uq.rcc.portal.resource.controller;
 
 import au.org.massive.strudel_web.job_control.ConfigurationRegistry;
 import au.org.massive.strudel_web.job_control.InvalidJsonConfigurationException;
 import au.org.massive.strudel_web.job_control.StrudelDesktopConfigurationAdapter;
-import au.org.rcc.ssh.CertAuthManager;
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthManager;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
-import au.org.rcc.miscs.ResourceServerSettings;
+import au.edu.uq.rcc.portal.resource.miscs.ResourceServerSettings;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;

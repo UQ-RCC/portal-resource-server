@@ -1,8 +1,8 @@
 package au.org.massive.strudel_web.ssh;
 
 import au.org.massive.strudel_web.util.UnsupportedKeyException;
-import au.org.rcc.ssh.CertAuthInfo;
-import au.org.rcc.ssh.CertFiles;
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthInfo;
+import au.edu.uq.rcc.portal.resource.ssh.CertFiles;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.exec.CommandLine;

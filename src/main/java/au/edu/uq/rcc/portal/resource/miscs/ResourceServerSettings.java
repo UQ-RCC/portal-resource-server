@@ -1,4 +1,4 @@
-package au.org.rcc.miscs;
+package au.edu.uq.rcc.portal.resource.miscs;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

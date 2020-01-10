@@ -3,12 +3,12 @@ package au.org.massive.strudel_web.ssh;
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 
-import au.org.rcc.ssh.CertAuthInfo;
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthInfo;
 import org.apache.commons.exec.DefaultExecutor;
 import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.Executor;
 
-import au.org.rcc.controller.AsyncTasks;
+import au.edu.uq.rcc.portal.resource.controller.AsyncTasks;
 import au.org.massive.strudel_web.util.UnsupportedKeyException;
 
 import org.apache.logging.log4j.LogManager;

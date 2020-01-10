@@ -1,5 +1,5 @@
 
-package au.org.rcc.controller;
+package au.edu.uq.rcc.portal.resource.controller;
 
 
 import au.org.massive.strudel_web.job_control.AbstractSystemConfiguration;
@@ -12,9 +12,9 @@ import au.org.massive.strudel_web.job_control.TaskResult;
 import au.org.massive.strudel_web.ssh.SSHExecException;
 import au.org.massive.strudel_web.vnc.GuacamoleSession;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
-import au.org.rcc.miscs.ResourceServerSettings;
-import au.org.rcc.ssh.CertAuthInfo;
-import au.org.rcc.ssh.CertAuthManager;
+import au.edu.uq.rcc.portal.resource.miscs.ResourceServerSettings;
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthInfo;
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthManager;
 import com.google.gson.GsonBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;

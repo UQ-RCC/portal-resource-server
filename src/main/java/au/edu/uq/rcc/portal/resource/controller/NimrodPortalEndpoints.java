@@ -1,12 +1,12 @@
-package au.org.rcc.controller;
+package au.edu.uq.rcc.portal.resource.controller;
 
+import au.edu.uq.rcc.portal.resource.miscs.ResourceServerSettings;
 import au.org.massive.strudel_web.ssh.ForkedSSHClient;
 import au.org.massive.strudel_web.ssh.SSHExecException;
 import au.org.massive.strudel_web.util.UnsupportedKeyException;
-import au.org.rcc.ResourceServerApplication;
-import au.org.rcc.miscs.ResourceServerSettings;
-import au.org.rcc.ssh.CertAuthInfo;
-import au.org.rcc.ssh.CertAuthManager;
+import au.edu.uq.rcc.portal.resource.ResourceServerApplication;
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthInfo;
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthManager;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hubspot.jinjava.Jinjava;

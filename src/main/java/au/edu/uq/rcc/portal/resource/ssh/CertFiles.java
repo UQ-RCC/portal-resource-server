@@ -1,4 +1,4 @@
-package au.org.rcc.ssh;
+package au.edu.uq.rcc.portal.resource.ssh;
 
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 

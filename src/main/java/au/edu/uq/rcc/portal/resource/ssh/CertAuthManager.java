@@ -1,4 +1,4 @@
-package au.org.rcc.ssh;
+package au.edu.uq.rcc.portal.resource.ssh;
 
 import au.org.massive.oauth2_hpc.ssh.SSHCertificateGenerator;
 import au.org.massive.oauth2_hpc.ssh.SSHCertificateGenerator.SSHCertType;

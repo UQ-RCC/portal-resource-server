@@ -1,4 +1,4 @@
-package au.org.rcc.security;
+package au.edu.uq.rcc.portal.resource.security;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;

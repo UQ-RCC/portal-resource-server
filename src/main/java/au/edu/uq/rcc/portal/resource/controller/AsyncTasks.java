@@ -1,11 +1,10 @@
-package au.org.rcc.controller;
+package au.edu.uq.rcc.portal.resource.controller;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-import javax.servlet.annotation.WebListener;
 import javax.annotation.ManagedBean;
 
 /**

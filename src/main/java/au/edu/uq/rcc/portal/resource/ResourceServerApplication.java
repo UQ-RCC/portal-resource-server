@@ -1,4 +1,4 @@
-package au.org.rcc;
+package au.edu.uq.rcc.portal.resource;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.springframework.boot.SpringApplication;
