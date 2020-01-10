@@ -19,19 +19,32 @@
  */
 package au.edu.uq.rcc.portal.resource.controller;
 
-import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
-import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
-import java.util.Map;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-@Controller
-public class UserController {
-	@RequestMapping(method = RequestMethod.GET, value = "/api/user")
-	@ResponseBody
-	public Map<String, Object> getExtraInfo(JwtAuthenticationToken jwtToken) {
-		return jwtToken.getTokenAttributes();
+@Component
+public class ResourceServerSettings {
+	@Autowired
+	@Value("${resource-server.remote-host}")
+	private String remoteHost;
+
+	private Path tmpDir;
+
+	@Autowired
+	private void setTmpDir(@Value("${resource-server.tmpdir}") Path tmpDir) throws IOException {
+		this.tmpDir = Files.createTempDirectory(tmpDir, "resource-server-");
+	}
+
+	public Path getTmpDir() {
+		return tmpDir;
+	}
+
+	public String getRemoteHost() {
+		return remoteHost;
 	}
 }
