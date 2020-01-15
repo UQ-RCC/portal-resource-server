@@ -28,31 +28,3 @@ spring:
           client-id: example-realm1-client
           client-secret: 00000000-0000-0000-0000-000000000000
           audience-id: audience-id
-
-# Nimrod-specific endpoint configuration
-nimrod:
-  datasource:
-    jdbc-url: jdbc:postgresql://db.example.com:5432/nimrod_portal
-    username: nimrod-portal
-    password: password
-    driver: org.postgresql.Driver
-  rabbitmq:
-    user: nimrod-portal
-    password: password
-    api: https://mq.example.com:15671/
-    cacert: /path/to/cacert.pem
-  remote:
-    rabbit-uritemplate: amqps://{username}:{amqp_password}@{amqp_host}/{username}
-    postgres-uritemplate: postgresql://{pg_host}/nimrod_portal?currentSchema={username}&ssl=true&sslmode=verify-ca&sslrootcert={ssl_cacert}
-    vars:
-      ssl_cacert: /path/to/nimrod/cacert.pem
-      amqp_host: mq.example.com
-      pg_host: db.example.com
-      # These are provided by the implementation
-      #pg_username:
-      #pg_password:
-      #amqp_username:
-      #amqp_password:
-      #amqp_routing_key:
-      #jdbc_url:
-      #amqp_url:
