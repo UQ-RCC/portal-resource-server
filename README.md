@@ -4,8 +4,8 @@ See `application.sample.yml` for example configuration.
 
 Configure this behind an nginx instance like so:
 ```
-location /nimbackend/ {
-    proxy_pass https://resource-server.example.com/nimbackend/;
+location /resource/ {
+    proxy_pass https://resource-server.example.com/resource/;
     proxy_set_header Host $host;
     proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto https;
@@ -160,14 +160,14 @@ If an endpoint `accessibleLocations` were defined as follows:
 
 You would get the following:
 ```
-$ curl -sv localhost:8082/nimbackend/api/execute/accessiblelocations | jq .
+$ curl -sv localhost:8082/resource/api/execute/accessiblelocations | jq .
 *   Trying ::1...
 * TCP_NODELAY set
 * connect to ::1 port 8082 failed: Connection refused
 *   Trying 127.0.0.1...
 * TCP_NODELAY set
 * Connected to localhost (127.0.0.1) port 8082 (#0)
-> GET /nimbackend/api/execute/accessiblelocations HTTP/1.1
+> GET /resource/api/execute/accessiblelocations HTTP/1.1
 > Host: localhost:8082
 > User-Agent: curl/7.58.0
 > Accept: */*

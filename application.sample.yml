@@ -2,7 +2,7 @@ server:
   port: 8082
   use-forward-headers: true
   servlet:
-    contextPath: /nimbackend
+    contextPath: /resource
 
 resource-server:
   tmpdir: /tmp
