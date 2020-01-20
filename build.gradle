@@ -87,8 +87,8 @@ distributions {
 		debDistZip.enabled false
 		debDistTar.enabled false
 		contents {
-			with distributions.main.contents {
-				into "usr/share/${project.name}"
+			into("usr/share/${project.name}") {
+				with distributions.main.contents
 			}
 
 			into("etc/${project.name}") {
