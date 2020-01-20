@@ -3,6 +3,7 @@ package au.org.massive.oauth2_hpc.ssh;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -14,14 +15,12 @@ import au.org.massive.oauth2_hpc.ssh.SSHCertificateGenerator.SSHCertType;
 import au.org.massive.oauth2_hpc.ssh.SSHCertificateGenerator.SSHCriticalOptions;
 import au.org.massive.oauth2_hpc.ssh.SSHCertificateGenerator.SSHExtensions;
 
-import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
-
 /**
  * Options for SSH certificate signing
  * @author jrigby
  *
  */
+@SuppressWarnings("WeakerAccess")
 public class SSHCertificateOptions {
 	final private RSAPublicKey pubKey;
 	final private long serial;
@@ -30,8 +29,8 @@ public class SSHCertificateOptions {
 	final private String[] principals;
 	final private long validBefore;
 	final private long validAfter;
-	final private ImmutableMap<SSHCriticalOptions, String> criticalOpts;
-	final private ImmutableSet<SSHExtensions> extensions;
+	final private Map<SSHCriticalOptions, String> criticalOpts;
+	final private Set<SSHExtensions> extensions;
 	
 	/**
 	 * Private constructor; object instantiated by the {@link SSHCertificateOptions.Builder}
@@ -49,8 +48,9 @@ public class SSHCertificateOptions {
 		this.principals = principals;
 		this.validBefore = validBefore;
 		this.validAfter = validAfter;
-		this.criticalOpts = ImmutableMap.<SSHCriticalOptions, String>builder().putAll(criticalOpts).build();
-		this.extensions = ImmutableSet.<SSHExtensions>builder().addAll(extensions).build();
+
+		this.criticalOpts = new HashMap<>(criticalOpts);
+		this.extensions = new HashSet<>(extensions);
 	}
 	
 	public RSAPublicKey getPubKey() {
@@ -82,11 +82,11 @@ public class SSHCertificateOptions {
 	}
 
 	public Map<SSHCriticalOptions, String> getCriticalOpts() {
-		return criticalOpts;
+		return Collections.unmodifiableMap(criticalOpts);
 	}
 
 	public Set<SSHExtensions> getExtensions() {
-		return extensions;
+		return Collections.unmodifiableSet(extensions);
 	}
 	
 	/**
@@ -109,11 +109,11 @@ public class SSHCertificateOptions {
 			serial = 0;
 			keyId = "";
 			type = SSHCertType.SSH_CERT_TYPE_USER;
-			principals = new LinkedList<String>();
+			principals = new LinkedList<>();
 			validBefore = 0;
 			validAfter = 0;
-			criticalOpts = new HashMap<SSHCriticalOptions, String>();
-			extensions = new HashSet<SSHExtensions>();
+			criticalOpts = new HashMap<>();
+			extensions = new HashSet<>();
 		}
 		
 		public SSHCertificateOptions build() {
@@ -198,8 +198,8 @@ public class SSHCertificateOptions {
 		 * Sets the standard {@link SSHExtensions}
 		 */
 		public Builder setDefaultOptions() {
-			criticalOpts = new HashMap<SSHCriticalOptions,String>();
-			extensions = new HashSet<SSHExtensions>(Arrays.asList(
+			criticalOpts = new HashMap<>();
+			extensions = new HashSet<>(Arrays.asList(
 					SSHExtensions.PERMIT_X11_FORWARDING,
 					SSHExtensions.PERMIT_AGENT_FORWARDING,
 					SSHExtensions.PERMIT_PORT_FORWARDING,
