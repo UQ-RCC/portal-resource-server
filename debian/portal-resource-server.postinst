@@ -2,28 +2,47 @@
 
 set -e
 
+user=portal-resource-server
+homedir=/var/lib/$user
+confdir=/etc/$user
+logdir=/var/log/$user
+
 if [ "$1" = "configure" ] || [ "$1" = "reconfigure" ] ; then
-	# create portal-resource-server group
-	if ! getent group portal-resource-server >/dev/null; then
-		addgroup --system portal-resource-server
+	if ! getent group $user >/dev/null; then
+		addgroup --system $user
 	fi
 
-	# create portal-resource-server user
-	if ! getent passwd portal-resource-server >/dev/null; then
-		adduser --system \
-		--ingroup portal-resource-server \
-		--home /var/lib/portal-resource-server \
-                --no-create-home \
-		--gecos "RCC Portal Service User" \
-                --disabled-login portal-resource-server
+	if ! getent passwd $user >/dev/null; then
+		adduser \
+		  --system \
+		  --ingroup $user \
+		  --home $homedir \
+		  --no-create-home \
+		  --gecos "RCC Portal Service User" \
+		  --disabled-login \
+      $user
 	fi
 
-    mkdir -p /var/lib/portal-resource-server
-    chown portal-resource-server:portal-resource-server /var/lib/portal-resource-server
+  mkdir -p $homedir
+  chown $user:$user $homedir
 
-    mkdir -p /var/log/portal-resource-server
-    chmod 1775 /var/log/portal-resource-server
-    chown root:portal-resource-server /var/log/portal-resource-server
+  mkdir -m 1755 -p $logdir
+  chown root:$user $logdir
+
+  # Fix perms and ownership on application.yml
+  chown root:$user $confdir/application.yml $confdir/logback-spring.xml
+  chmod 0640 $confdir/application.yml
+  chmod 0644 $confdir/logback-spring.xml
+
+  # Generate a snakeoil key if none already
+  if [ ! -f $confdir/ca_snakeoil ]; then
+    ssh-keygen -q -P '' -t rsa -b 2048 -f $confdir/ca_snakeoil
+  fi
+
+  chown root:$user $confdir/ca_snakeoil $confdir/ca_snakeoil.pub
+  chmod 0640 $confdir/ca_snakeoil
+  chmod 0644 $confdir/ca_snakeoil.pub
+
 fi
 
 #DEBHELPER#

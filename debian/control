@@ -8,7 +8,7 @@ Vcs-Browser: https://github.com/UQ-RCC/portal-resource-server
 
 Package: portal-resource-server
 Architecture: all
-Depends: default-jre-headless (>= 1.8), adduser
+Depends: default-jre-headless (>= 1.8), adduser, openssh-client
 Description: RCC Portal Resource Server
  Handles SSH communication with HPC
 Homepage: https://rcc.uq.edu.au/nimrod

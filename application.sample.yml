@@ -15,8 +15,8 @@ resource-server:
     rng-algorithm: SHA1PRNG
     validity: 300 # 5 minutes
     # Only the private key is needed
-    ca_private: /path/to/server_ca
-    ca_passphrase: passphrase
+    ca_private: /etc/portal-resource-server/ca_snakeoil
+    ca_passphrase:
 
 spring:
   security:
