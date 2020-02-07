@@ -12,7 +12,7 @@ resource-server:
   cert:
     key-algorithm: RSA
     key-bits: 4096
-    rng-algorithm: SHA1PRNG
+    rng-algorithm: NativePRNGNonBlocking
     validity: 300 # 5 minutes
     # Only the private key is needed
     ca_private: /etc/portal-resource-server/ca_snakeoil
