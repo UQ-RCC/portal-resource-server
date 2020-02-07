@@ -151,7 +151,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
         cmdLine.addArgument("-q");
         cmdLine.addArgument("-i");
         cmdLine.addArgument(certFiles.getPrivKeyFile().toAbsolutePath().toString());
-        cmdLine.addArgument(String.format("-oCertificateFile=%s", certFiles.getCertFile().toAbsolutePath().toString()));
+        //cmdLine.addArgument(String.format("-oCertificateFile=%s", certFiles.getCertFile().toAbsolutePath().toString()));
         cmdLine.addArgument("-oUserKnownHostsFile=/dev/null");
         cmdLine.addArgument("-oStrictHostKeyChecking=no"); // TODO: Remove me when ready
         cmdLine.addArgument("-oBatchMode=yes");
