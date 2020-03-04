@@ -20,6 +20,8 @@
 package au.edu.uq.rcc.portal.resource.controller;
 
 
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthInfo;
+import au.edu.uq.rcc.portal.resource.ssh.CertAuthManager;
 import au.org.massive.strudel_web.job_control.AbstractSystemConfiguration;
 import au.org.massive.strudel_web.job_control.ConfigurationRegistry;
 import au.org.massive.strudel_web.job_control.MissingRequiredTaskParametersException;
@@ -30,12 +32,14 @@ import au.org.massive.strudel_web.job_control.TaskResult;
 import au.org.massive.strudel_web.ssh.SSHExecException;
 import au.org.massive.strudel_web.vnc.GuacamoleSession;
 import au.org.massive.strudel_web.vnc.GuacamoleSessionManager;
-import au.edu.uq.rcc.portal.resource.ssh.CertAuthInfo;
-import au.edu.uq.rcc.portal.resource.ssh.CertAuthManager;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
@@ -48,16 +52,12 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.security.GeneralSecurityException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Endpoints for all the jobs
@@ -81,106 +81,92 @@ public class JobControlEndpoints {
 	@Autowired
 	private ResourceServerSettings resourceServerSettings;
 
+	@Autowired
+	private ObjectMapper mapper;
+
 	@RequestMapping(method = {RequestMethod.GET, RequestMethod.POST},
 			value = "/api/execute/{task}")
 	@ResponseBody
-	public TaskResult<List<Map<String, String>>> executeJob0(
+	public ResponseEntity<TaskResult<List<Map<String, String>>>> executeJob0(
 			HttpServletRequest request,
-			HttpServletResponse response,
 			Authentication auth,
-			@PathVariable final String task) throws IOException, NoSuchTaskTypeException {
-		return executeJob(request, response, auth, task, null, 0);
+			@PathVariable final String task) throws NoSuchTaskTypeException {
+		return executeJob(request, auth, task, null, 0);
 	}
 
 	@RequestMapping(method = {RequestMethod.GET, RequestMethod.POST},
 			value = "/api/execute/{task}/on/{host}")
 	@ResponseBody
-	public TaskResult<List<Map<String, String>>> executeJob1(
+	public ResponseEntity<TaskResult<List<Map<String, String>>>> executeJob1(
 			HttpServletRequest request,
-			HttpServletResponse response,
 			Authentication auth,
-			@PathVariable final String task) throws IOException, NoSuchTaskTypeException {
-		return executeJob(request, response, auth, task, null, 0);
+			@PathVariable final String task) throws NoSuchTaskTypeException {
+		return executeJob(request, auth, task, null, 0);
 	}
 
 	@RequestMapping(method = {RequestMethod.GET, RequestMethod.POST},
 			value = "/api/execute/{task}/in/{configuration}")
 	@ResponseBody
-	public TaskResult<List<Map<String, String>>> executeJob2(
+	public ResponseEntity<TaskResult<List<Map<String, String>>>> executeJob2(
 			HttpServletRequest request,
-			HttpServletResponse response,
 			Authentication auth,
 			@PathVariable final String task,
-			@PathVariable final String configuration) throws IOException, NoSuchTaskTypeException {
-		return executeJob(request, response, auth, task, configuration, 0);
+			@PathVariable final String configuration) throws NoSuchTaskTypeException {
+		return executeJob(request, auth, task, configuration, 0);
 	}
 
 	@RequestMapping(method = {RequestMethod.GET, RequestMethod.POST},
 			value = "/api/execute/{task}/in/{configuration}/on/{host}")
 	@ResponseBody
-	public TaskResult<List<Map<String, String>>> executeJob(
+	public ResponseEntity<TaskResult<List<Map<String, String>>>> executeJob(
 			HttpServletRequest request,
-			HttpServletResponse response,
 			Authentication auth,
 			@PathVariable final String task,
 			@PathVariable final String configuration,
-			@RequestParam(value = "retries", defaultValue = "0") Integer retries) throws IOException, NoSuchTaskTypeException {
+			@RequestParam(value = "retries", defaultValue = "0") Integer retries) throws NoSuchTaskTypeException {
 		Jwt jwt = ((JwtAuthenticationToken)auth).getToken();
 		String username = jwt.getClaimAsString("preferred_username");
 		if(username == null) {
-			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid username");
-			return null;
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 		}
 
 		String host = resourceServerSettings.getRemoteHost();
 		AbstractSystemConfiguration systemConfiguration =
 				(configuration == null) ? systemConfigurations.getDefaultSystemConfiguration() : systemConfigurations.getSystemConfigurationById(configuration);
 		if(systemConfiguration == null) {
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid configuration name");
-			return null;
+			return ResponseEntity.badRequest().build();
 		}
 
 		if(!request.getMethod().equalsIgnoreCase(systemConfiguration.findByTaskType(task).getHttpMethod())) {
-			response.sendError(HttpServletResponse.SC_METHOD_NOT_ALLOWED, "Method " + request.getMethod() + " not allowed");
-			return null;
+			return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).build();
 		}
 
 		Map<String, String> parameters = new HashMap<>();
-		for(String key : request.getParameterMap().keySet()) {
-			String value = request.getParameterMap().get(key)[0]; // Only one value is accepted
-			parameters.put(key, value);
-		}
+		request.getParameterMap().forEach((k, v) -> parameters.put(k, v[0]));
 		parameters.remove("access_token");
 
-		Map<String, Object> logMap = new HashMap<>();
-		logMap.put("timestamp", Instant.now().toString());
-		logMap.put("type", "request");
+		ObjectNode logMap = mapper.createObjectNode()
+				.put("timestamp", Instant.now().toString())
+				.put("type", "request");
 
 		{
-			Map<String, List<String>> headers = new HashMap<>();
+			ObjectNode headers = mapper.createObjectNode();
+			Collections.list(request.getHeaderNames())
+					.forEach(h -> headers.set(h, mapper.valueToTree(Collections.list(request.getHeaders(h)))));
+			headers.remove("authorization");
 
-			Enumeration<String> hnames = request.getHeaderNames();
-			while(hnames.hasMoreElements()) {
-				String name = hnames.nextElement();
-				if("authorization".equalsIgnoreCase(name)) {
-					continue;
-				}
-				headers.put(name, Collections.list(request.getHeaders(name)));
-			}
+			ObjectNode request2 = mapper.createObjectNode();
+			request2.put("uri", request.getRequestURI());
+			request2.set("parameters", mapper.valueToTree(parameters));
+			request2.set("headers", headers);
 
-			Map<String, Object> tmpMap = new HashMap<>();
-			tmpMap.put("uri", request.getRequestURI());
-			tmpMap.put("parameters", parameters);
-			tmpMap.put("headers", headers);
-
-			logMap.put("request", tmpMap);
+			logMap.set("request", request2);
 		}
 
-		Map<String, Object> logMapResponse = new HashMap<>();
-		logMapResponse.put("code", HttpServletResponse.SC_OK);
-		logMapResponse.put("message", "OK");
-
-		logMap.put("response", logMapResponse);
+		ObjectNode ron = mapper.createObjectNode();
+		ron.put("code", HttpServletResponse.SC_OK);
+		ron.put("message", "OK");
+		logMap.set("response", ron);
 
 		Task remoteTask;
 		try {
@@ -192,55 +178,44 @@ public class JobControlEndpoints {
 				logger.info("Successfully executed task \"" + task + "\" on \"" + host + "\" from configuration \"" + configuration + "\" for " + request.getUserPrincipal());
 
 				{
-					Map<String, Object> rmap = new HashMap<>();
+					ObjectNode rmap = mapper.createObjectNode();
 					if(result.hasUserMessages()) {
-						rmap.put("user_messages", result.getUserMessages());
+						rmap.set("user_messages", mapper.valueToTree(result.getUserMessages()));
 					} else {
-						rmap.put("user_messages", Collections.EMPTY_LIST);
+						rmap.set("user_messages", mapper.valueToTree(Collections.EMPTY_LIST));
 					}
 
-					rmap.put("command_result", result.getCommandResult());
+					rmap.set("command_result", mapper.valueToTree(result.getCommandResult()));
 
-					logMap.put("result", rmap);
+					logMap.set("result", rmap);
 				}
-				return result;
+				return ResponseEntity.ok(result);
 			} catch(MissingRequiredTaskParametersException e) {
-				e.printStackTrace();
-				logMapResponse.put("code", HttpServletResponse.SC_BAD_REQUEST);
-				logMapResponse.put("message", e.getMessage());
-				response.sendError(HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
-				return null;
+				ron.put("code", HttpServletResponse.SC_BAD_REQUEST);
+				ron.put("message", e.getMessage());
+				return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
 			} catch(SSHExecException e1) {
 				// If this request fails, try using the default remote host
 				if(retries < 1 && (systemConfiguration.findByTaskType(task).getRemoteHost() != null)
 						&& !systemConfiguration.findByTaskType(task).getRemoteHost().isEmpty()) {
-					return executeJob(request, response, auth, task, configuration, 1);
+					return executeJob(request, auth, task, configuration, 1);
 				} else {
-					e1.printStackTrace();
-					logMapResponse.put("code", HttpServletResponse.SC_NOT_MODIFIED);
-					logMapResponse.put("message", e1.getMessage());
-					response.sendError(HttpServletResponse.SC_NOT_MODIFIED, e1.getMessage());
-					return null;
+					ron.put("code", HttpServletResponse.SC_NOT_MODIFIED);
+					ron.put("message", e1.getMessage());
+
+					return ResponseEntity.status(HttpStatus.NOT_MODIFIED).build();
 				}
 			}
 		} catch(NoSuchTaskTypeException e) {
-			e.printStackTrace();
-			logMapResponse.put("code", HttpServletResponse.SC_NOT_FOUND);
-			logMapResponse.put("message", e.getMessage());
-			response.sendError(HttpServletResponse.SC_NOT_FOUND, e.getMessage());
-			return null;
+			ron.put("code", HttpServletResponse.SC_NOT_FOUND);
+			ron.put("message", e.getMessage());
+			return ResponseEntity.notFound().build();
 		} catch(Exception e) {
-			e.printStackTrace();
-			logMapResponse.put("code", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-			logMapResponse.put("message", e.getMessage());
-			response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-			return null;
+			ron.put("code", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+			ron.put("message", e.getMessage());
+			return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
 		} finally {
-			logger.info("AUDIT: {}", new GsonBuilder()
-					.enableComplexMapKeySerialization()
-					.create()
-					.toJson(logMap)
-			);
+			logger.info("AUDIT: {}", logMap.toString());
 		}
 
 	}
@@ -255,28 +230,24 @@ public class JobControlEndpoints {
 	 * @param viaGateway        a gateway through which the tunnel is created (optional, can be inferred if configurationName provided)
 	 * @param configurationName the name of the configuration used for this tunnel (optional, recommended)
 	 * @param request           the {@link HttpServletRequest} object
-	 * @param response          the {@link HttpServletResponse} object
 	 * @return a vnc session id and desktop name
-	 * @throws IOException thrown on network IO errors
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/api/startvnctunnel")
 	@ResponseBody
-	public Map<String, Object> startVncTunnel(
+	public ResponseEntity<ObjectNode> startVncTunnel(
 			HttpServletRequest request,
-			HttpServletResponse response,
 			Authentication auth,
 			@RequestParam(value = "desktopname") String desktopName,
 			@RequestParam(value = "vncpassword") String vncPassword,
 			@RequestParam(value = "remotehost") String remoteHost,
 			@RequestParam(value = "display") int display,
 			@RequestParam(value = "via_gateway", required = false) String viaGateway,
-			@RequestParam(value = "configuration", defaultValue = "") String configurationName) throws IOException, GeneralSecurityException {
+			@RequestParam(value = "configuration", defaultValue = "") String configurationName) throws GeneralSecurityException {
 
 		Jwt jwt = ((JwtAuthenticationToken)auth).getToken();
 		String username = jwt.getClaimAsString("preferred_username");
 		if(username == null) {
-			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid username");
-			return null;
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 		}
 
 		int remotePort = display + 5900;
@@ -293,11 +264,11 @@ public class JobControlEndpoints {
 		GuacamoleSession guacSession = guacamoleSessionManager.startSession(desktopName, vncPassword, viaGateway, remoteHost, remotePort, username);
 		logger.info("Done creating guacSession");
 
-		Map<String, Object> responseData = new HashMap<>();
-		responseData.put("id", guacSession.getId());
-		responseData.put("desktopName", desktopName);
-		responseData.put("localPort", guacSession.getLocalPort());
-		return responseData;
+		return ResponseEntity.ok(mapper.createObjectNode()
+				.put("id", guacSession.getId())
+				.put("desktopName", desktopName)
+				.put("localPort", guacSession.getLocalPort())
+		);
 	}
 
 	/**
@@ -305,23 +276,19 @@ public class JobControlEndpoints {
 	 *
 	 * @param guacSessionId id of the vnc tunnel session
 	 * @param request       the {@link HttpServletRequest} object
-	 * @param response      the {@link HttpServletResponse} object
 	 * @return a status message
-	 * @throws IOException thrown on network IO errors
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/api/stopvnctunnel")
 	@ResponseBody
-	public Map<String, String> stopVncTunnel(
+	public ResponseEntity<ObjectNode> stopVncTunnel(
 			HttpServletRequest request,
-			HttpServletResponse response,
 			Authentication auth,
-			@RequestParam(value = "id") int guacSessionId) throws IOException {
+			@RequestParam(value = "id") int guacSessionId) {
 
 		Jwt jwt = ((JwtAuthenticationToken)auth).getToken();
 		String username = jwt.getClaimAsString("preferred_username");
 		if(username == null) {
-			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid username");
-			return null;
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 		}
 
 		GuacamoleSession guacSession = null;
@@ -331,52 +298,44 @@ public class JobControlEndpoints {
 				break;
 			}
 		}
-		Map<String, String> responseData = new HashMap<>();
+
+		ObjectNode responseData = mapper.createObjectNode();
 		if(guacSession == null) {
-			response.sendError(HttpServletResponse.SC_BAD_REQUEST, "No active session found by supplied ID");
-			return null;
+			return ResponseEntity.badRequest().build();
 		} else {
 			guacamoleSessionManager.endSession(guacSession, username);
 			responseData.put("message", "session deleted");
 		}
-		return responseData;
+		return ResponseEntity.ok(responseData);
 	}
 
 	/**
 	 * Lists all active VNC sessions for the current user
 	 *
 	 * @param request  the {@link HttpServletRequest} object
-	 * @param response the {@link HttpServletResponse} object
 	 * @return a list of tunnels
-	 * @throws IOException thrown on network IO errors
 	 */
 	@RequestMapping(method = RequestMethod.GET, value = "/api/listvnctunnels")
 	@ResponseBody
-	public List<Map<String, Object>> listVncTunnels(
-			HttpServletRequest request,
-			HttpServletResponse response,
-			Authentication auth) throws IOException {
+	public ResponseEntity<ArrayNode> listVncTunnels(HttpServletRequest request, Authentication auth) {
 
 		Jwt jwt = ((JwtAuthenticationToken)auth).getToken();
 		String username = jwt.getClaimAsString("preferred_username");
 		if(username == null) {
-			response.sendError(HttpServletResponse.SC_FORBIDDEN, "Invalid username");
-			return null;
+			return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
 		}
 
 		logger.info("@listVncTunnel:" + username);
 
-		Set<GuacamoleSession> guacSessions = guacamoleSessionManager.getGuacamoleSessionsSet(username);
-		List<Map<String, Object>> tunnels = new ArrayList<>(guacSessions.size());
-		for(GuacamoleSession s : guacSessions) {
-			Map<String, Object> tunnel = new HashMap<>();
-			tunnels.add(tunnel);
-			tunnel.put("id", s.getId());
-			tunnel.put("desktopName", s.getName());
-			tunnel.put("password", s.getPassword());
-			tunnel.put("localPort", s.getLocalPort());
-		}
-		return tunnels;
+		ArrayNode tunnels = mapper.createArrayNode();
+		guacamoleSessionManager.getGuacamoleSessionsSet(username).forEach(s -> tunnels.add(mapper.createObjectNode()
+				.put("id", s.getId())
+				.put("desktopName", s.getName())
+				.put("password", s.getPassword())
+				.put("localPort", s.getLocalPort())
+		));
+
+		return ResponseEntity.ok(tunnels);
 	}
 
 	@RequestMapping(method = RequestMethod.GET, value = "/api/configurations")
