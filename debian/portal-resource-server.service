@@ -1,6 +1,8 @@
 [Unit]
 Description=RCC Portal Resource Server
 After=network.target
+ConditionPathExists=/etc/portal-resource-server/application.yml
+ConditionPathExists=/etc/portal-resource-server/logback-spring.xml
 
 [Service]
 Type=simple
