@@ -44,6 +44,7 @@ dependencies {
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-tomcat', version: SPRING_BOOT_VERSION
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: SPRING_BOOT_VERSION
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security', version: SPRING_BOOT_VERSION
+	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-actuator', version: SPRING_BOOT_VERSION
 
 	implementation group: 'org.springframework.security', name: 'spring-security-core', version: SPRING_SECURITY_VERSION
 	implementation group: 'org.springframework.security', name: 'spring-security-oauth2-jose', version: SPRING_SECURITY_VERSION
