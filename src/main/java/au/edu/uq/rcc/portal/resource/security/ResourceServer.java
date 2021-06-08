@@ -20,6 +20,7 @@
 package au.edu.uq.rcc.portal.resource.security;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.IssuerUriCondition;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
@@ -55,6 +56,7 @@ public class ResourceServer extends WebSecurityConfigurerAdapter {
 		//http.authorizeRequests().anyRequest().permitAll();
 
 		http.authorizeRequests().antMatchers("/api/configurations").permitAll();
+		http.authorizeRequests().requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll();
 
 		JwtAuthenticationConverter jc = new JwtAuthenticationConverter();
 		jc.setJwtGrantedAuthoritiesConverter(jwt -> {
