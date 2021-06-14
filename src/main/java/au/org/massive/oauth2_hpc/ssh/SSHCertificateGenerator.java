@@ -11,6 +11,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
@@ -18,7 +19,6 @@ import java.util.Random;
 import java.util.TreeMap;
 
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.springframework.security.crypto.codec.Base64;
 
 /**
  * Signs ssh-rsa public keys and produces a certificate
@@ -122,15 +122,9 @@ public class SSHCertificateGenerator {
 	public static String generateSSHCertificate(SSHCertificateOptions options, RSAPublicKey caPubKey, RSAPrivateKey caPrivKey) throws IOException, InvalidKeyException, SignatureException {
 		final String header = "ssh-rsa-cert-v01@openssh.com ";
 		final String footer = " ssh-authz@"+System.currentTimeMillis();
-		
-		String cert = new String(Base64
-				.encode(signCert(options, caPubKey, caPrivKey)));
-		
-		StringBuilder sb = new StringBuilder();
-		sb.append(header);
-		sb.append(cert);
-		sb.append(footer);
-		return sb.toString();
+		final String cert = new String(Base64.getEncoder().encode(signCert(options, caPubKey, caPrivKey)));
+
+		return header + cert + footer;
 	}
 	
 	/**
@@ -216,7 +210,7 @@ public class SSHCertificateGenerator {
 	
 	private static <T extends SSHOptions> void writeValue(Map<T,String> options, DataOutputStream out) throws IOException {
 		// Ensure that options are in lexical order
-		TreeMap<T,String> sortedOpts = new TreeMap<T,String>(new SSHOptionsComparator());
+		TreeMap<T,String> sortedOpts = new TreeMap<>(new SSHOptionsComparator());
 		sortedOpts.putAll(options);
 		
 		String[] data = new String[sortedOpts.size() * 2];
@@ -232,7 +226,7 @@ public class SSHCertificateGenerator {
 	
 	private static <T extends SSHOptions> void writeValue(Collection<T> options, DataOutputStream out) throws IOException {
 		// Ensure that options are in lexical order
-		Map<T,String> map = new TreeMap<T,String>(new SSHOptionsComparator());
+		Map<T,String> map = new TreeMap<>(new SSHOptionsComparator());
 		for (T option : options) {
 			map.put(option, "");
 		}
