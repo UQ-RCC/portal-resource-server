@@ -18,6 +18,13 @@ resource-server:
     ca_private: /etc/portal-resource-server/ca_snakeoil
     ca_passphrase:
 
+cors:
+  allowed-origin-patterns:
+    - '*'
+    # - 'nimrod.example.com'
+    # - '*.example.com'
+  max-age: 3600
+
 spring:
   security:
     oauth2:

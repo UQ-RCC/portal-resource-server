@@ -19,11 +19,13 @@
  */
 package au.edu.uq.rcc.portal.resource.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.actuate.autoconfigure.security.servlet.EndpointRequest;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.IssuerUriCondition;
 import org.springframework.boot.autoconfigure.security.oauth2.resource.OAuth2ResourceServerProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
@@ -42,8 +44,13 @@ import org.springframework.security.oauth2.jwt.JwtValidators;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationConverter;
 import org.springframework.security.oauth2.server.resource.authentication.JwtGrantedAuthoritiesConverter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +61,7 @@ public class ResourceServer extends WebSecurityConfigurerAdapter {
 	@Override
 	public void configure(HttpSecurity http) throws Exception {
 		//http.authorizeRequests().anyRequest().permitAll();
+		http = http.cors().and();
 
 		http.authorizeRequests().antMatchers("/api/configurations").permitAll();
 		http.authorizeRequests().requestMatchers(EndpointRequest.toAnyEndpoint()).permitAll();
@@ -78,6 +86,20 @@ public class ResourceServer extends WebSecurityConfigurerAdapter {
 				.oauth2ResourceServer()
 				.jwt()
 				.jwtAuthenticationConverter(jc);
+	}
+
+	@Bean
+	CorsConfigurationSource corsConfigurationSource(@Autowired CustomCorsConfig corsConfig) {
+		/* See this answer: https://stackoverflow.com/a/41000211 */
+		CorsConfiguration cors = new CorsConfiguration();
+		cors.setAllowedOriginPatterns(corsConfig.allowedOriginPatterns);
+		cors.setAllowedMethods(Arrays.asList("POST", "GET", "OPTIONS"));
+		cors.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type"));
+		cors.setMaxAge(corsConfig.maxAge);
+
+		UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+		source.registerCorsConfiguration("/**", cors);
+		return source;
 	}
 
 	/* All of this is edited from OAuth2ResourceServerJwtConfiguration */
