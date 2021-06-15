@@ -22,6 +22,7 @@ package au.edu.uq.rcc.portal.resource.ssh;
 import au.org.massive.oauth2_hpc.ssh.SSHCertificateGenerator;
 import au.org.massive.oauth2_hpc.ssh.SSHCertificateGenerator.SSHCertType;
 import au.org.massive.oauth2_hpc.ssh.SSHCertificateOptions;
+import com.kstruct.gethostname4j.Hostname;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -34,7 +35,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.security.GeneralSecurityException;
@@ -137,7 +137,7 @@ public class CertAuthManager {
 		SSHCertificateOptions certOpts = SSHCertificateOptions.builder()
 				.setDefaultOptions()
 				.addPrincipal(username)
-				.setKeyId(InetAddress.getLocalHost().getHostName() + "-cert_" + username)
+				.setKeyId(Hostname.getHostname() + "-cert_" + username)
 				.setPubKey((RSAPublicKey)keyPair.getPublic())
 				.setValidAfter(validAfter.getEpochSecond())
 				.setValidBefore(validBefore.getEpochSecond())

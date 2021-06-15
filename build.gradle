@@ -40,6 +40,8 @@ targetCompatibility = 1.8
 dependencies {
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-1.2-api', version: '2.12.1'
 
+	implementation group: 'com.kstruct', name: 'gethostname4j', version: '0.0.3'
+
 	/* Spring dependencies */
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-tomcat', version: SPRING_BOOT_VERSION
 	implementation group: 'org.springframework.boot', name: 'spring-boot-starter-web', version: SPRING_BOOT_VERSION
