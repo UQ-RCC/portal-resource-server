@@ -211,6 +211,7 @@ public class JobControlEndpoints {
 			ron.put("message", e.getMessage());
 			return ResponseEntity.notFound().build();
 		} catch(Exception e) {
+			logger.catching(e);
 			ron.put("code", HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
 			ron.put("message", e.getMessage());
 			return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE).build();
