@@ -62,19 +62,19 @@ jobs:
           RCC_PACKAGE_SIGNING_KEY: ${{ secrets.RCC_PACKAGE_SIGNING_KEY }}
           RCC_PACKAGE_SIGNING_KEY_ID: ${{ secrets.RCC_PACKAGE_SIGNING_KEY_ID }}
 
-      - name: Push packages to packages.rcc.uq.edu.au
-        run: |
-          mkdir -p ~/.ssh && chmod 0700 ~/.ssh
-          printf '%s' "$RCC_PACKAGE_KNOWN_HOSTS" > ~/.ssh/known_hosts
-          printf '%s' "$RCC_PACKAGE_SSH_KEY" > deploy
-          chmod 0600 deploy
+      # - name: Push packages to packages.rcc.uq.edu.au
+      #   run: |
+      #     mkdir -p ~/.ssh && chmod 0700 ~/.ssh
+      #     printf '%s' "$RCC_PACKAGE_KNOWN_HOSTS" > ~/.ssh/known_hosts
+      #     printf '%s' "$RCC_PACKAGE_SSH_KEY" > deploy
+      #     chmod 0600 deploy
 
-          sftp -i deploy gh-actions@packages.rcc.uq.edu.au <<EOF
-            put dist/*.deb /ubuntu/pool/main/portal-resource-server
-          EOF
-        env:
-          RCC_PACKAGE_SSH_KEY: ${{ secrets.RCC_PACKAGE_SSH_KEY }}
-          RCC_PACKAGE_KNOWN_HOSTS: ${{ secrets.RCC_PACKAGE_KNOWN_HOSTS }}
+      #     sftp -i deploy gh-actions@packages.rcc.uq.edu.au <<EOF
+      #       put dist/*.deb /ubuntu/pool/main/portal-resource-server
+      #     EOF
+      #   env:
+      #     RCC_PACKAGE_SSH_KEY: ${{ secrets.RCC_PACKAGE_SSH_KEY }}
+      #     RCC_PACKAGE_KNOWN_HOSTS: ${{ secrets.RCC_PACKAGE_KNOWN_HOSTS }}
 
       - uses: softprops/action-gh-release@v1
         env:
