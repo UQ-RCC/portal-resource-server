@@ -1,5 +1,16 @@
 # RCC Portals Resource Server
 
+## Building
+Build the resource server using gradle
+
+```
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64
+./gradlew clean distTar
+```
+
+The build is written to `build/distributions`
+
+## Configuration
 See `application.sample.yml` for example configuration.
 
 Configure this behind an nginx instance like so:
