@@ -142,13 +142,18 @@ public class ForkedSSHClient extends AbstractSSHClient {
     public String exec(String[] args, byte[] stdin, Map<String, String> extraFlags, ExecuteWatchdog watchdog) throws IOException {
 
         CertFiles certFiles = new CertFiles(authInfo, tmpDir);
+        logger.info("Private key: " + certFiles.getPrivKeyFile().toAbsolutePath());
+        logger.info("Cert file: " + certFiles.getCertFile().toAbsolutePath());
+        logger.info("Cert exists: " + certFiles.getCertFile().toFile().exists());
+        logger.info("Cert size: " + certFiles.getCertFile().toFile().length());
 
         /* Socket path, needs to be reproducible. */
         String sshConnection = "ssh://" + getAuthInfo().getUserName() + "@" + getViaGateway();
         Path socketPath = tmpDir.resolve(String.format("sshsock-%d", sshConnection.hashCode()));
 
         CommandLine cmdLine = new CommandLine("ssh");
-        cmdLine.addArgument("-q");
+        //cmdLine.addArgument("-q");
+        cmdLine.addArgument("-vvv");
         cmdLine.addArgument("-i");
         cmdLine.addArgument(certFiles.getPrivKeyFile().toAbsolutePath().toString());
         cmdLine.addArgument(String.format("-oCertificateFile=%s", certFiles.getCertFile().toAbsolutePath().toString()));

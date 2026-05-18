@@ -14,13 +14,13 @@ jobs:
       # Work around https://github.com/actions/checkout/issues/290
       - run: git fetch --force --tags
 
-      - uses: actions/cache@v2
+      - uses: actions/cache@v3
         with:
           path: |
             .citemp/caches
             .citemp/wrapper
           key: gradle-cache
-      - uses: actions/setup-java@v1
+      - uses: actions/setup-java@v3
         with:
           java-version: 8
 
@@ -34,7 +34,7 @@ jobs:
           cp portal-resource-server_*_all.deb dist/
           cp build/distributions/portal-resource-server-*.tar.gz dist/
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: release-artifacts
           path: dist/*
@@ -44,7 +44,7 @@ jobs:
     if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v3
         with:
           name: release-artifacts
           path: dist
@@ -76,7 +76,7 @@ jobs:
       #     RCC_PACKAGE_SSH_KEY: ${{ secrets.RCC_PACKAGE_SSH_KEY }}
       #     RCC_PACKAGE_KNOWN_HOSTS: ${{ secrets.RCC_PACKAGE_KNOWN_HOSTS }}
 
-      - uses: softprops/action-gh-release@v1
+      - uses: softprops/action-gh-release@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
