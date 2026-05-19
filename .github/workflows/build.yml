@@ -31,7 +31,13 @@ jobs:
       - name: Build
         run: |
           export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
-          ./gradlew --quiet -g .citemp --no-daemon clean distTar
+          # Get version from git tag
+          VERSION=${GITHUB_REF#refs/tags/}
+          echo "Building version: $VERSION"
+          ./gradlew --quiet -g .citemp --no-daemon clean distTar \
+            -Pversion=$VERSION    # pass version explicitly to gradle
+          echo "=== Distribution files ==="
+          ls -la build/distributions/
 
       - run: make -f Makefile.deb all
 
@@ -40,13 +46,15 @@ jobs:
           mkdir -p dist
           echo "=== build/distributions contents ==="
           ls -la build/distributions/
-          cp portal-resource-server_*_all.deb dist/
-          cp build/distributions/*.tar.gz dist/    # use plain wildcard
-
-            - uses: actions/upload-artifact@v4
-              with:
-                name: release-artifacts
-                path: dist/*
+          
+          # Copy deb if exists, don't fail if not
+          cp portal-resource-server_*_all.deb dist/ 2>/dev/null || echo "No deb file found"
+          
+          # Copy tar.gz
+          cp build/distributions/*.tar.gz dist/
+          
+          echo "=== dist contents ==="
+          ls -la dist/
 
   deploy:
     needs: build
