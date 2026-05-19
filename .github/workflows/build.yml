@@ -26,15 +26,15 @@ jobs:
           java-version: 8
 
       - run: sudo apt-get -y install debhelper make fakeroot
+
       - name: Build
         run: |
           export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
           ./gradlew --quiet -g .citemp --no-daemon clean distTar
 
       - run: make -f Makefile.deb all
-      
 
-      - name: stage distribution files
+      - name: Stage distribution files
         run: |
           mkdir -p dist
           cp portal-resource-server_*_all.deb dist/
