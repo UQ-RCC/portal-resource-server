@@ -58,7 +58,9 @@ jobs:
 
       - name: Sign packages
         run: |
-          sudo apt-get -y install dpkg-sig
+          sudo apt-get update  
+          sudo apt-get -y install dpkg-sig || \
+          sudo apt-get -y install debsigs
           printf '%s' "$RCC_PACKAGE_SIGNING_KEY" | gpg --import --batch
           dpkg-sig -k $RCC_PACKAGE_SIGNING_KEY_ID -s builder dist/*.deb
           for i in dist/*; do
@@ -97,8 +99,15 @@ jobs:
 
       - name: Rename tar.gz to tgz and copy to docker context
         run: |
-          cp dist/portal-resource-server-${{ steps.version.outputs.VERSION }}.tar.gz \
-             docker/prs-${{ steps.version.outputs.VERSION }}.tgz
+          # Debug - show what's in dist
+          echo "=== Files in dist/ ==="
+          ls -la dist/
+          TARFILE=$(ls dist/*.tar.gz | head -1)
+          echo "Found tarfile: $TARFILE"
+          cp "$TARFILE" docker/prs-${{ steps.version.outputs.VERSION }}.tgz
+          echo "Copied to: docker/prs-${{ steps.version.outputs.VERSION }}.tgz"
+          echo "=== Files in docker/ ==="
+          ls -la docker/
 
       - name: Log in to Harbor registry
         run: |
