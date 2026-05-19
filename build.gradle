@@ -30,9 +30,9 @@ repositories {
 	mavenCentral()
 }
 
-application {
-    mainClass = 'au.edu.uq.rcc.portal.resource.ResourceServerApplication'
-}
+
+mainClassName = 'au.edu.uq.rcc.portal.resource.ResourceServerApplication'
+
 
 ext {
 	SPRING_BOOT_VERSION     = '2.4.3'
