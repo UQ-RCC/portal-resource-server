@@ -1,6 +1,6 @@
 name: Build & Test
 
-on: 
+on:
   push:
     tags:
       - '*.*.*'
@@ -26,35 +26,51 @@ jobs:
           distribution: temurin
           java-version: 8
 
-      - run: sudo apt-get -y install debhelper make fakeroot
+      - run: sudo apt-get update && sudo apt-get -y install debhelper make fakeroot
 
       - name: Build
         run: |
           export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
-          # Get version from git tag
           VERSION=${GITHUB_REF#refs/tags/}
           echo "Building version: $VERSION"
           ./gradlew --quiet -g .citemp --no-daemon clean distTar \
-            -Pversion=$VERSION    # pass version explicitly to gradle
-          echo "=== Distribution files ==="
-          ls -la build/distributions/
+            -Pversion=$VERSION
 
       - run: make -f Makefile.deb all
 
       - name: Stage distribution files
         run: |
           mkdir -p dist
-          echo "=== build/distributions contents ==="
+
+          echo "=== build/distributions ==="
           ls -la build/distributions/
-          
-          # Copy deb if exists, don't fail if not
-          cp portal-resource-server_*_all.deb dist/ 2>/dev/null || echo "No deb file found"
-          
-          # Copy tar.gz
-          cp build/distributions/*.tar.gz dist/
-          
+
+          echo "=== workspace root ==="
+          ls -la
+
+          # Copy deb - try multiple locations, don't fail
+          cp *.deb dist/ 2>/dev/null || \
+          cp portal-resource-server*.deb dist/ 2>/dev/null || \
+          echo "Warning: No deb file found, skipping"
+
+          # Copy only the correctly versioned tar.gz, skip null
+          VERSION=${GITHUB_REF#refs/tags/}
+          if [ -f "build/distributions/portal-resource-server-${VERSION}.tar.gz" ]; then
+            cp build/distributions/portal-resource-server-${VERSION}.tar.gz dist/
+            echo "Copied portal-resource-server-${VERSION}.tar.gz"
+          else
+            echo "ERROR: Expected file not found"
+            ls build/distributions/
+            exit 1
+          fi
+
           echo "=== dist contents ==="
           ls -la dist/
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: dist/*
 
   deploy:
     needs: build
@@ -83,12 +99,14 @@ jobs:
          # RCC_PACKAGE_SIGNING_KEY: ${{ secrets.RCC_PACKAGE_SIGNING_KEY }}
         #  RCC_PACKAGE_SIGNING_KEY_ID: ${{ secrets.RCC_PACKAGE_SIGNING_KEY_ID }}
 
-      - name: Generate checksums      # skip signing - key is expired
+
+      - name: Generate checksums
         run: |
+          echo "=== dist contents ==="
+          ls -la dist/
           for i in dist/*; do
             sha256sum "$i" > "$i.sha256"
           done
-
 
       - uses: softprops/action-gh-release@v2
         env:
@@ -121,12 +139,23 @@ jobs:
         run: |
           echo "=== Files in dist/ ==="
           ls -la dist/
-          TARFILE=$(ls dist/*.tar.gz | head -1)
-          echo "Found tarfile: $TARFILE"
-          echo "=== Archive contents (first 5 lines) ==="
-          tar tzf "$TARFILE" | head -5
-          cp "$TARFILE" docker/prs-${{ steps.version.outputs.VERSION }}.tgz
-          ls -la docker/
+
+          # Use versioned file directly
+          VERSION=${{ steps.version.outputs.VERSION }}
+          TARFILE="dist/portal-resource-server-${VERSION}.tar.gz"
+
+          if [ -f "$TARFILE" ]; then
+            echo "Found: $TARFILE"
+            echo "=== Archive contents (first 5 lines) ==="
+            tar tzf "$TARFILE" | head -5
+            cp "$TARFILE" docker/prs-${VERSION}.tgz
+            echo "=== Files in docker/ ==="
+            ls -la docker/
+          else
+            echo "ERROR: $TARFILE not found"
+            ls -la dist/
+            exit 1
+          fi
 
       - name: Log in to Harbor registry
         run: |
