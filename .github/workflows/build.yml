@@ -59,10 +59,13 @@ jobs:
       - name: Sign packages
         run: |
           sudo apt-get update  
-          sudo apt-get -y install dpkg-sig || \
-          sudo apt-get -y install debsigs
+          sudo apt-get -y install debsigs gpg
           printf '%s' "$RCC_PACKAGE_SIGNING_KEY" | gpg --import --batch
-          dpkg-sig -k $RCC_PACKAGE_SIGNING_KEY_ID -s builder dist/*.deb
+          # Use debsigs instead of dpkg-sig
+          for deb in dist/*.deb; do
+            debsigs --sign=origin -k $RCC_PACKAGE_SIGNING_KEY_ID "$deb"
+          done
+          # Generate checksums for all files
           for i in dist/*; do
             sha256sum "$i" > "$i.sha256"
           done
