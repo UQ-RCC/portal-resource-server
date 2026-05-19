@@ -15,33 +15,45 @@ plugins {
 	id 'fr.brouillard.oss.gradle.jgitver' version '0.8.0'
 }
 
-if (project.hasProperty('version') && project.version != 'unspecified') {
-    version = project.version
-}
-
-jgitver {
-	useDistance true
-	useGitCommitID true
-	useDirty true
-	autoIncrementPatch false
-}
-
 repositories {
 	mavenCentral()
 }
-
-
-mainClassName = 'au.edu.uq.rcc.portal.resource.ResourceServerApplication'
-
 
 ext {
 	SPRING_BOOT_VERSION     = '2.4.3'
 	SPRING_SECURITY_VERSION = '5.5.2'
 }
 
+def cleanVersion(String v) {
+	return v.replaceAll(/-.*/, '')
+}
+
+if (project.hasProperty('version') && project.version != 'unspecified') {
+	version = cleanVersion(project.version.toString())
+} else {
+	version = '1.0.0'
+}
+
+ jgitver {
+	useDistance true
+	useGitCommitID true
+	useDirty true
+	autoIncrementPatch false
+} 
+
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
 [compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
+
+tasks.jar {
+	archiveBaseName = 'portal-resource-server'
+	archiveVersion = ''
+}
+
+mainClassName = 'au.edu.uq.rcc.portal.resource.ResourceServerApplication'
+
+
+
 
 dependencies {
 	implementation group: 'org.apache.logging.log4j', name: 'log4j-1.2-api', version: '2.15.0'
@@ -76,6 +88,9 @@ distributions {
 	main {
 		distZip.enabled false
 		contents {
+			from(tasks.jar) {
+				into "lib"
+			}
 			eachFile {
 				if (it.relativePath.segments[-2] == 'lib') {
 					it.mode = 0644
