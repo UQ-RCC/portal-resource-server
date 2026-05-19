@@ -12,5 +12,6 @@ RUN set -x \
   && tar xzf /tmp/prs-${VERSION}.tgz \
      --strip-components=2 \
      --wildcards \
-     "*/lib/*" "*/bin/*" \
+     "*/lib" \
+     "*/bin" \
   && rm /tmp/prs-${VERSION}.tgz
