@@ -68,6 +68,7 @@ dependencies {
 
 distributions {
 	main {
+		distributionBaseName = 'portal-resource-server'
 		distZip.enabled false
 		contents {
 			eachFile {

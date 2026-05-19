@@ -8,5 +8,9 @@ COPY prs-${VERSION}.tgz /tmp/
 
 RUN set -x \
   && yum install -y java-1.8.0-openjdk-headless openssh-clients \
-  && tar xzf /tmp/prs-${VERSION}.tgz opt/portal-resource-server-${VERSION}/lib opt/portal-resource-server-${VERSION}/bin --strip-components=2 \
+  && tar tzf /tmp/prs-${VERSION}.tgz | head -10 \
+  && tar xzf /tmp/prs-${VERSION}.tgz \
+     --strip-components=2 \
+     --wildcards \
+     "*/lib/*" "*/bin/*" \
   && rm /tmp/prs-${VERSION}.tgz
