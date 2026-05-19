@@ -6,15 +6,11 @@ ARG VERSION
 
 COPY prs-${VERSION}.tgz /tmp/
 
-RUN set -x \
-  && yum install -y java-1.8.0-openjdk-headless openssh-clients \
-  && echo "=== Archive contents ===" \
-  && tar tzf /tmp/prs-${VERSION}.tgz | head -10 \
-  && tar xzf /tmp/prs-${VERSION}.tgz \
-     --strip-components=1 \
-  && echo "=== Extracted contents ===" \
-  && ls -la \
-  && chmod +x bin/portal-resource-server \
-  && rm /tmp/prs-${VERSION}.tgz
+RUN yum install -y java-1.8.0-openjdk-headless openssh-clients \
+    && tar xzf /tmp/prs-${VERSION}.tgz -C /tmp \
+    && mv /tmp/portal-resource-server-${VERSION}/* /opt/portal-resource-server/ \
+    && chmod +x /opt/portal-resource-server/bin/portal-resource-server \
+    && rm -rf /tmp/portal-resource-server-${VERSION} \
+    && rm /tmp/prs-${VERSION}.tgz
 
-CMD ["bin/portal-resource-server"]
+CMD ["/opt/portal-resource-server/bin/portal-resource-server"]
