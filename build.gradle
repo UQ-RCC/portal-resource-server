@@ -115,7 +115,9 @@ distributions {
 
 distTar {
 	compression Compression.GZIP
-	extension 'tar.gz' /* Not .tgz */
+	//extension 'tar.gz' /* Not .tgz */
+	extension 'tgz'  /* changed from 'tar.gz' to 'tgz' */
+	archiveFileName = "prs-${version}.tgz" /* changed from "prs-${version}.tar.gz" to "prs-${version}.tgz" */
 }
 
 installDebDist {

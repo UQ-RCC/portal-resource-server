@@ -11,7 +11,6 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      # Work around https://github.com/actions/checkout/issues/290
       - run: git fetch --force --tags
 
       - uses: actions/cache@v4
@@ -20,14 +19,20 @@ jobs:
             .citemp/caches
             .citemp/wrapper
           key: gradle-cache
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 8
 
       - run: sudo apt-get -y install debhelper make fakeroot
-      - run: ./gradlew --quiet -g .citemp --no-daemon distTar
+      - name: Build
+        run: |
+          export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))
+          ./gradlew --quiet -g .citemp --no-daemon clean distTar
+
       - run: make -f Makefile.deb all
+      
 
       - name: stage distribution files
         run: |
@@ -55,7 +60,6 @@ jobs:
           sudo apt-get -y install dpkg-sig
           printf '%s' "$RCC_PACKAGE_SIGNING_KEY" | gpg --import --batch
           dpkg-sig -k $RCC_PACKAGE_SIGNING_KEY_ID -s builder dist/*.deb
-
           for i in dist/*; do
             sha256sum "$i" > "$i.sha256"
           done
@@ -63,22 +67,53 @@ jobs:
           RCC_PACKAGE_SIGNING_KEY: ${{ secrets.RCC_PACKAGE_SIGNING_KEY }}
           RCC_PACKAGE_SIGNING_KEY_ID: ${{ secrets.RCC_PACKAGE_SIGNING_KEY_ID }}
 
-      # - name: Push packages to packages.rcc.uq.edu.au
-      #   run: |
-      #     mkdir -p ~/.ssh && chmod 0700 ~/.ssh
-      #     printf '%s' "$RCC_PACKAGE_KNOWN_HOSTS" > ~/.ssh/known_hosts
-      #     printf '%s' "$RCC_PACKAGE_SSH_KEY" > deploy
-      #     chmod 0600 deploy
-
-      #     sftp -i deploy gh-actions@packages.rcc.uq.edu.au <<EOF
-      #       put dist/*.deb /ubuntu/pool/main/portal-resource-server
-      #     EOF
-      #   env:
-      #     RCC_PACKAGE_SSH_KEY: ${{ secrets.RCC_PACKAGE_SSH_KEY }}
-      #     RCC_PACKAGE_KNOWN_HOSTS: ${{ secrets.RCC_PACKAGE_KNOWN_HOSTS }}
-
       - uses: softprops/action-gh-release@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           files: dist/*
+
+  docker:
+    needs: build
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: git fetch --force --tags
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-artifacts
+          path: dist
+
+      - name: Get version from tag
+        id: version
+        run: |
+          echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          echo "Building version: ${GITHUB_REF#refs/tags/}"
+
+      - name: Rename tar.gz to tgz and copy to docker context
+        run: |
+          cp dist/portal-resource-server-${{ steps.version.outputs.VERSION }}.tar.gz \
+             docker/prs-${{ steps.version.outputs.VERSION }}.tgz
+
+      - name: Log in to Harbor registry
+        run: |
+          echo "${{ secrets.REGISTRY_PASSWORD }}" | \
+          docker login registry.rc.nectar.org.au \
+            -u ${{ secrets.REGISTRY_USERNAME }} --password-stdin
+
+      - name: Build Docker image
+        run: |
+          docker build \
+            --build-arg VERSION=${{ steps.version.outputs.VERSION }} \
+            -f docker/Dockerfile \
+            -t registry.rc.nectar.org.au/rcc-portals-a/apps-ipp-prs:${{ steps.version.outputs.VERSION }} \
+            docker/
+
+      - name: Push Docker image
+        run: |
+          docker push \
+            registry.rc.nectar.org.au/rcc-portals-a/apps-ipp-prs:${{ steps.version.outputs.VERSION }}
