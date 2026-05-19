@@ -38,13 +38,15 @@ jobs:
       - name: Stage distribution files
         run: |
           mkdir -p dist
+          echo "=== build/distributions contents ==="
+          ls -la build/distributions/
           cp portal-resource-server_*_all.deb dist/
-          cp build/distributions/portal-resource-server-*.tar.gz dist/
+          cp build/distributions/*.tar.gz dist/    # use plain wildcard
 
-      - uses: actions/upload-artifact@v4
-        with:
-          name: release-artifacts
-          path: dist/*
+            - uses: actions/upload-artifact@v4
+              with:
+                name: release-artifacts
+                path: dist/*
 
   deploy:
     needs: build
@@ -109,19 +111,13 @@ jobs:
 
       - name: Rename tar.gz to tgz and copy to docker context
         run: |
-          # Debug - show what's in dist
           echo "=== Files in dist/ ==="
           ls -la dist/
           TARFILE=$(ls dist/*.tar.gz | head -1)
           echo "Found tarfile: $TARFILE"
-          
-          # Show contents of archive to verify folder structure
-          echo "=== Archive contents (first 10 lines) ==="
-          tar tzf "$TARFILE" | head -10
-
+          echo "=== Archive contents (first 5 lines) ==="
+          tar tzf "$TARFILE" | head -5
           cp "$TARFILE" docker/prs-${{ steps.version.outputs.VERSION }}.tgz
-          echo "Copied to: docker/prs-${{ steps.version.outputs.VERSION }}.tgz"
-          echo "=== Files in docker/ ==="
           ls -la docker/
 
       - name: Log in to Harbor registry

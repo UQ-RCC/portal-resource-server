@@ -117,7 +117,7 @@ distTar {
     compression Compression.GZIP
     extension 'tar.gz'
     archiveFileName = "portal-resource-server-${version}.tar.gz"  
-	archiveBaseName = 'portal-resource-server'
+	//archiveBaseName = 'portal-resource-server'
 }
 
 installDebDist {
