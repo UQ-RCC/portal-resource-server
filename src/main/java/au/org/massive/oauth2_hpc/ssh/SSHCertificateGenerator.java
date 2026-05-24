@@ -120,7 +120,8 @@ public class SSHCertificateGenerator {
 	 * @throws SignatureException thrown if a signature could not be generated
 	 */
 	public static String generateSSHCertificate(SSHCertificateOptions options, RSAPublicKey caPubKey, RSAPrivateKey caPrivKey) throws IOException, InvalidKeyException, SignatureException {
-		final String header = "ssh-rsa-cert-v01@openssh.com ";
+		//final String header = "ssh-rsa-cert-v01@openssh.com ";
+		final String header = "rsa-sha2-256-cert-v01@openssh.com ";
 		final String footer = " ssh-authz@"+System.currentTimeMillis();
 		final String cert = new String(Base64.getEncoder().encode(signCert(options, caPubKey, caPrivKey)));
 
@@ -148,7 +149,8 @@ public class SSHCertificateGenerator {
 		byte[] nonce = new byte[32];
 		rnd.nextBytes(nonce);
 		
-		writeValue("ssh-rsa-cert-v01@openssh.com", dos);
+		//writeValue("ssh-rsa-cert-v01@openssh.com", dos);
+		writeValue("rsa-sha2-256-cert-v01@openssh.com", dos);
 		writeValue(nonce, dos);
 		writeValue(options.getPubKey().getPublicExponent().toByteArray(), dos);
 		writeValue(options.getPubKey().getModulus().toByteArray(), dos);
@@ -186,7 +188,8 @@ public class SSHCertificateGenerator {
 		ByteArrayOutputStream buf = new ByteArrayOutputStream();
 		DataOutputStream out1 = new DataOutputStream(buf);
 		try {
-			Signature signature = Signature.getInstance("SHA1withRSA", new BouncyCastleProvider());
+			//Signature signature = Signature.getInstance("SHA1withRSA", new BouncyCastleProvider());
+			Signature signature = Signature.getInstance("SHA256withRSA", new BouncyCastleProvider());
 			signature.initSign(privKey);
 			signature.update(dataToSign);
 			writeValue("ssh-rsa", out1);
