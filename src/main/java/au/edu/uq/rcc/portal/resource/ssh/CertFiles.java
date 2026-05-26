@@ -66,7 +66,7 @@ public class CertFiles implements Closeable {
 		} */
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-	        try(PEMWriter pemw = new PEMWriter(new OutputStreamWriter(baos))) {
+	        try(PemWriter pemw = new PemWriter(new OutputStreamWriter(baos))) {
         	    pemw.writeObject(new PemObject(
                 	"PRIVATE KEY",
                 	authInfo.getKeyPair().getPrivate().getEncoded()
