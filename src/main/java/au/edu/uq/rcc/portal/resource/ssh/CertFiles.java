@@ -59,7 +59,7 @@ public class CertFiles implements Closeable {
 		opts.add(StandardOpenOption.TRUNCATE_EXISTING);
 		opts.add(StandardOpenOption.WRITE);
 
-		//old- writes PKCS#1 format, new - writes OpenSSH format
+		//old- writes PKCS#1 format, new - writes PKCS#8 format
 		/*ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		 try(JcaPEMWriter pemw = new JcaPEMWriter(new OutputStreamWriter(baos))) {
 			pemw.writeObject(authInfo.getKeyPair().getPrivate());

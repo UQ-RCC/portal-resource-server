@@ -152,8 +152,8 @@ public class ForkedSSHClient extends AbstractSSHClient {
         Path socketPath = tmpDir.resolve(String.format("sshsock-%d", sshConnection.hashCode()));
 
         CommandLine cmdLine = new CommandLine("ssh");
-        //cmdLine.addArgument("-q");
-        cmdLine.addArgument("-vvv");
+        cmdLine.addArgument("-q");
+        //cmdLine.addArgument("-vvv");
         cmdLine.addArgument("-i");
         cmdLine.addArgument(certFiles.getPrivKeyFile().toAbsolutePath().toString());
         cmdLine.addArgument(String.format("-oCertificateFile=%s", certFiles.getCertFile().toAbsolutePath().toString()));
