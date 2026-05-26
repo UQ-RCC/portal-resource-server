@@ -20,6 +20,9 @@
 package au.edu.uq.rcc.portal.resource.ssh;
 
 import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
+import org.bouncycastle.crypto.util.OpenSSHPrivateKeyUtil; 
+import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.util.io.pem.PemObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
@@ -55,10 +58,25 @@ public class CertFiles implements Closeable {
 		opts.add(StandardOpenOption.TRUNCATE_EXISTING);
 		opts.add(StandardOpenOption.WRITE);
 
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		try(JcaPEMWriter pemw = new JcaPEMWriter(new OutputStreamWriter(baos))) {
+		//old- writes PKCS#1 format, new - writes OpenSSH format
+		/*ByteArrayOutputStream baos = new ByteArrayOutputStream();
+		 try(JcaPEMWriter pemw = new JcaPEMWriter(new OutputStreamWriter(baos))) {
 			pemw.writeObject(authInfo.getKeyPair().getPrivate());
-		}
+		} */
+
+		ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try(JcaPEMWriter pemw = new JcaPEMWriter(new OutputStreamWriter(baos))) {
+            pemw.writeObject(new PemObject(
+                "OPENSSH PRIVATE KEY",
+                OpenSSHPrivateKeyUtil.encodeKeyBlob(
+                    PrivateKeyFactory.createKey(
+                        authInfo.getKeyPair().getPrivate().getEncoded()
+                    )
+                )
+            ));
+        }
+
+
 
 		/* NB: newByteChannel() is the only way to do this atomically. */
 		try(ByteChannel c = Files.newByteChannel(privKeyFile, opts, PosixFilePermissions.asFileAttribute(perms))) {

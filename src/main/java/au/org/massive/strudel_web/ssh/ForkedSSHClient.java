@@ -209,7 +209,7 @@ public class ForkedSSHClient extends AbstractSSHClient {
         } finally {
             logMap.put("output", output.toString());
             logger.info("AUDIT: {}", gson.toJson(logMap));
-            //certFiles.close();
+            certFiles.close();
         }
         return output.toString();
     }

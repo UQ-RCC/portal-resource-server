@@ -192,7 +192,8 @@ public class SSHCertificateGenerator {
 			Signature signature = Signature.getInstance("SHA256withRSA", new BouncyCastleProvider());
 			signature.initSign(privKey);
 			signature.update(dataToSign);
-			writeValue("ssh-rsa", out1);
+			//writeValue("ssh-rsa", out1);
+			writeValue("rsa-sha2-256", out1);
 			writeValue(signature.sign(), out1);
 		} catch (NoSuchAlgorithmException e) {
 			throw new RuntimeException(e);
