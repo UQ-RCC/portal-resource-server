@@ -19,9 +19,9 @@
  */
 package au.edu.uq.rcc.portal.resource.ssh;
 
-import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
-import org.bouncycastle.crypto.util.OpenSSHPrivateKeyUtil; 
+import org.bouncycastle.crypto.util.OpenSSHPrivateKeyUtil;
 import org.bouncycastle.crypto.util.PrivateKeyFactory;
+import org.bouncycastle.openssl.jcajce.JcaPEMWriter;
 import org.bouncycastle.util.io.pem.PemObject;
 
 import java.io.ByteArrayOutputStream;
@@ -65,15 +65,15 @@ public class CertFiles implements Closeable {
 		} */
 
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        try(JcaPEMWriter pemw = new JcaPEMWriter(new OutputStreamWriter(baos))) {
-            pemw.writeObject(new PemObject(
-                "OPENSSH PRIVATE KEY",
-                OpenSSHPrivateKeyUtil.encodeKeyBlob(
-                    PrivateKeyFactory.createKey(
-                        authInfo.getKeyPair().getPrivate().getEncoded()
-                    )
-                )
-            ));
+	        try(JcaPEMWriter pemw = new JcaPEMWriter(new OutputStreamWriter(baos))) {
+        	    pemw.writeObject(new PemObject(
+                	"OPENSSH PRIVATE KEY",
+                	OpenSSHPrivateKeyUtil.encodePrivateKey(
+                    		PrivateKeyFactory.createKey(
+                        		authInfo.getKeyPair().getPrivate().getEncoded()
+                    		)
+                	)
+            	));
         }
 
 
